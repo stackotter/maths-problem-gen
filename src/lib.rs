@@ -5,6 +5,7 @@ pub mod fmt;
 pub mod gen;
 pub mod render;
 pub mod solve;
+pub mod derive;
 
 #[derive(PartialEq, Clone)]
 pub enum Op {

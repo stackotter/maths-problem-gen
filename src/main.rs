@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use maths_problem_gen::{eval::eval, gen::{gen_all, gen_equation}, render, Equation, solve::solve};
+use maths_problem_gen::{eval::eval, gen::{gen_all, gen_equation}, render, Equation, solve::solve, derive::derive};
 
 fn main() {
     // let expr = gen_all();
@@ -16,4 +16,6 @@ fn main() {
     println!("{}, x = {}", equation, answer);
 
     // render::render(&equation, &Path::new("out.png")).expect("render to pdf should succeed");
+
+    println!("{}", derive(&equation.lhs))
 }
