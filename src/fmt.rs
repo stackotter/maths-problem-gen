@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use crate::{Equation, Expr, Rational, Pair, Op};
 
-fn bracketize(s: &str) -> String {
+pub fn bracketize(s: &str) -> String {
     format!("({})", s)
 }
 
@@ -19,7 +19,7 @@ impl Display for Op {
 
 impl Display for Pair {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let (lrequires_brackets, rrequires_brackets) = self.requires_brackets();
+        let (lrequires_brackets, rrequires_brackets) = self.requires_brackets(false);
 
         let mut l = format!("{}", self.left);
         let mut r = format!("{}", self.right);

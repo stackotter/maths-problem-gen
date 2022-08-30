@@ -1,7 +1,9 @@
 pub mod eval;
 pub mod fmt;
 pub mod gen;
+pub mod render;
 
+#[derive(PartialEq)]
 pub enum Op {
     Add,
     Sub,
@@ -36,15 +38,34 @@ impl Pair {
         Self { left, op, right }
     }
 
-    pub fn requires_brackets(&self) -> (bool, bool) {
+    pub fn requires_brackets(&self, division_as_fraction: bool) -> (bool, bool) {
+        if self.op == Op::Div && division_as_fraction {
+            return (false, false);
+        }
+
         let lprecedence = self.left.precedence();
+        let precedence = self.op.precedence();
         let rprecedence = self.right.precedence();
 
-        let precedence = self.op.precedence();
+        let mut lrequires = lprecedence < precedence;
+        let mut rrequires = rprecedence < precedence || (rprecedence == precedence && self.op.is_associative());
+
+        if division_as_fraction {
+            match &self.left {
+                Expr::Rational(_) => lrequires = false,
+                Expr::Pair(pair) => if pair.op == Op::Div { lrequires = false },
+                _ => ()
+            }
+            match &self.right {
+                Expr::Rational(_) => rrequires = false,
+                Expr::Pair(pair) => if pair.op == Op::Div { rrequires = false },
+                _ => ()
+            }
+        }
 
         (
-            lprecedence < precedence,
-            rprecedence < precedence || (rprecedence == precedence && self.op.is_associative()),
+            lrequires,
+            rrequires
         )
     }
 }

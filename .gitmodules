@@ -1,0 +1,3 @@
+[submodule "math-api"]
+	path = math-api
+	url = https://github.com/chialab/math-api.git
