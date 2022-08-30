@@ -1,3 +1,4 @@
+use crate::Equation;
 use crate::{
     Expr,
     Op::{self, Add, Div, Mul, Sub},
@@ -30,4 +31,19 @@ pub fn gen_all() -> Expr {
             pair(Rational::new(2, 3).into(), Mul, Rational::new(6, 2).into()),
         ),
     )
+}
+
+pub fn gen_equation() -> Equation {
+    Equation {
+        lhs: pair(
+            pair(Expr::Variable('x'), Add, int(3)),
+            Add,
+            pair(
+                int(1),
+                Div,
+                pair(Rational::new(2, 3).into(), Mul, Rational::new(6, 2).into()),
+            ),
+        ),
+        rhs: Expr::Rational(Rational::new(23, 2)),
+    }
 }

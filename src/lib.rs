@@ -1,7 +1,10 @@
+use std::char;
+
 pub mod eval;
 pub mod fmt;
 pub mod gen;
 pub mod render;
+pub mod solve;
 
 #[derive(PartialEq, Clone)]
 pub enum Op {
@@ -23,6 +26,15 @@ impl Op {
         match self {
             Op::Add | Op::Mul => true,
             Op::Sub | Op::Div => false,
+        }
+    }
+
+    pub fn inverse(&self) -> Op {
+        match self {
+            Op::Add => Op::Sub,
+            Op::Sub => Op::Add,
+            Op::Mul => Op::Div,
+            Op::Div => Op::Mul
         }
     }
 }
@@ -98,6 +110,7 @@ pub enum Expr {
     Rational(Rational),
     Pair(Box<Pair>),
     Negative(Box<Expr>),
+    Variable(char),
 }
 
 impl Expr {
@@ -106,6 +119,7 @@ impl Expr {
             Expr::Rational(_) => 2,
             Expr::Pair(pair) => pair.op.precedence(),
             Expr::Negative(_) => 1,
+            Expr::Variable(_) => 3
         }
     }
 }

@@ -46,12 +46,17 @@ impl Rational {
     }
 }
 
-pub fn eval(expr: &Expr) -> Rational {
+#[derive(Debug)]
+pub enum EvalErr {
+    EncounteredUnknown(char),
+}
+
+pub fn eval(expr: &Expr) -> Result<Rational, EvalErr> {
     let answer = match expr {
         Expr::Rational(rational) => rational.to_owned(),
         Expr::Pair(pair) => {
-            let lval = eval(&pair.left);
-            let mut rval = eval(&pair.right);
+            let lval = eval(&pair.left)?;
+            let mut rval = eval(&pair.right)?;
 
             match pair.op {
                 Op::Add => {
@@ -70,7 +75,7 @@ pub fn eval(expr: &Expr) -> Rational {
                         Expr::Rational(lval),
                         Op::Add,
                         Expr::Rational(rval),
-                    ))))
+                    ))))?
                 }
                 Op::Mul => Rational {
                     numerator: lval.numerator * rval.numerator,
@@ -87,11 +92,12 @@ pub fn eval(expr: &Expr) -> Rational {
             }
         }
         Expr::Negative(expr) => {
-            let mut val = eval(expr);
+            let mut val = eval(expr)?;
             val.numerator = -val.numerator;
             val
         }
+        Expr::Variable(unknown) => return Err(EvalErr::EncounteredUnknown(unknown.to_owned())),
     };
 
-    answer.simplified()
+    Ok(answer.simplified())
 }
