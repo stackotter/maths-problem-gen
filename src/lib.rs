@@ -48,25 +48,31 @@ impl Pair {
         let rprecedence = self.right.precedence();
 
         let mut lrequires = lprecedence < precedence;
-        let mut rrequires = rprecedence < precedence || (rprecedence == precedence && self.op.is_associative());
+        let mut rrequires =
+            rprecedence < precedence || (rprecedence == precedence && self.op.is_associative());
 
         if division_as_fraction {
             match &self.left {
                 Expr::Rational(_) => lrequires = false,
-                Expr::Pair(pair) => if pair.op == Op::Div { lrequires = false },
-                _ => ()
+                Expr::Pair(pair) => {
+                    if pair.op == Op::Div {
+                        lrequires = false
+                    }
+                }
+                _ => (),
             }
             match &self.right {
                 Expr::Rational(_) => rrequires = false,
-                Expr::Pair(pair) => if pair.op == Op::Div { rrequires = false },
-                _ => ()
+                Expr::Pair(pair) => {
+                    if pair.op == Op::Div {
+                        rrequires = false
+                    }
+                }
+                _ => (),
             }
         }
 
-        (
-            lrequires,
-            rrequires
-        )
+        (lrequires, rrequires)
     }
 }
 

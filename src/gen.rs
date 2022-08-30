@@ -22,20 +22,12 @@ pub fn gen_addition() -> Expr {
 
 pub fn gen_all() -> Expr {
     pair(
-        pair(
-            int(8),
-            Add,
-            int(3)
-        ),
+        pair(int(8), Add, int(3)),
         Add,
         pair(
             int(1),
             Div,
-            pair(
-                Rational::new(2, 3).into(),
-                Mul,
-                Rational::new(6, 2).into()
-            )
-        )
+            pair(Rational::new(2, 3).into(), Mul, Rational::new(6, 2).into()),
+        ),
     )
 }

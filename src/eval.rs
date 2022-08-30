@@ -1,6 +1,6 @@
 use std::mem::swap;
 
-use crate::{Expr, Pair, Rational, Op};
+use crate::{Expr, Op, Pair, Rational};
 
 fn lcm(a: u64, b: u64) -> u64 {
     let mut guess = if a > b { a } else { b };
@@ -40,7 +40,7 @@ impl Rational {
         } else {
             Rational {
                 numerator: self.numerator / (divisor as i64),
-                denominator: self.denominator / divisor
+                denominator: self.denominator / divisor,
             }
         }
     }
@@ -72,12 +72,10 @@ pub fn eval(expr: &Expr) -> Rational {
                         Expr::Rational(rval),
                     ))))
                 }
-                Op::Mul => {
-                    Rational {
-                        numerator: lval.numerator * rval.numerator,
-                        denominator: lval.denominator * rval.denominator,
-                    }
-                }
+                Op::Mul => Rational {
+                    numerator: lval.numerator * rval.numerator,
+                    denominator: lval.denominator * rval.denominator,
+                },
                 Op::Div => {
                     let denom_sign = rval.numerator.signum();
 

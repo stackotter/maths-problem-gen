@@ -1,5 +1,5 @@
+use crate::{Equation, Expr, Op, Pair, Rational};
 use std::fmt::Display;
-use crate::{Equation, Expr, Rational, Pair, Op};
 
 pub fn bracketize(s: &str) -> String {
     format!("({})", s)
@@ -11,7 +11,7 @@ impl Display for Op {
             Op::Add => "+",
             Op::Sub => "-",
             Op::Mul => "*",
-            Op::Div => "/"
+            Op::Div => "/",
         };
         f.write_str(&c)
     }

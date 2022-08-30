@@ -1,5 +1,10 @@
-use crate::{Expr, Op, fmt::bracketize, Pair, Rational};
-use std::{error::Error, path::Path, fs::File, io::{Cursor, copy}};
+use crate::{fmt::bracketize, Expr, Op, Pair, Rational};
+use std::{
+    error::Error,
+    fs::File,
+    io::{copy, Cursor},
+    path::Path,
+};
 
 use reqwest::blocking::Client;
 
@@ -34,7 +39,7 @@ impl LatexConvertible for Pair {
         match self.op {
             Op::Add | Op::Sub => format!("{} {} {}", l, self.op, r),
             Op::Mul => format!("{} \\times {}", l, r),
-            Op::Div => format!("\\frac{{{}}}{{{}}}", l, r)
+            Op::Div => format!("\\frac{{{}}}{{{}}}", l, r),
         }
     }
 }
@@ -42,12 +47,8 @@ impl LatexConvertible for Pair {
 impl LatexConvertible for Expr {
     fn to_latex(&self) -> String {
         match self {
-            Expr::Rational(rational) => {
-                rational.to_latex()
-            }
-            Expr::Pair(pair) => {
-                pair.to_latex()
-            }
+            Expr::Rational(rational) => rational.to_latex(),
+            Expr::Pair(pair) => pair.to_latex(),
             Expr::Negative(expr) => {
                 format!("-{}", expr.to_latex())
             }
@@ -55,17 +56,20 @@ impl LatexConvertible for Expr {
     }
 }
 
-pub fn render(expr: &Expr, file: &Path) -> Result<(), Box<dyn Error>>{
+pub fn render(expr: &Expr, file: &Path) -> Result<(), Box<dyn Error>> {
     let latex = expr.to_latex();
 
     let client = Client::new();
-    let response = client.get("http://localhost:3000/render").query(&[
-        ("input", "latex"),
-        ("source", &latex),
-        ("output", "png"),
-        ("width", "400"),
-        ("height", "400")
-    ]).send()?;
+    let response = client
+        .get("http://localhost:3000/render")
+        .query(&[
+            ("input", "latex"),
+            ("source", &latex),
+            ("output", "png"),
+            ("width", "400"),
+            ("height", "400"),
+        ])
+        .send()?;
 
     let mut file = File::create(file)?;
     let mut content = Cursor::new(response.bytes()?);
