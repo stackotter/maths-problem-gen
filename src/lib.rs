@@ -3,7 +3,7 @@ pub mod fmt;
 pub mod gen;
 pub mod render;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum Op {
     Add,
     Sub,
@@ -27,6 +27,7 @@ impl Op {
     }
 }
 
+#[derive(Clone)]
 pub struct Pair {
     pub left: Expr,
     pub right: Expr,
@@ -92,6 +93,7 @@ pub enum ExactVal {
     Rational(Rational),
 }
 
+#[derive(Clone)]
 pub enum Expr {
     Rational(Rational),
     Pair(Box<Pair>),

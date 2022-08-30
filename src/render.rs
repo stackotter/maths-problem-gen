@@ -1,4 +1,4 @@
-use crate::{fmt::bracketize, Expr, Op, Pair, Rational};
+use crate::{fmt::bracketize, Expr, Op, Pair, Rational, Equation};
 use std::{
     error::Error,
     fs::File,
@@ -56,8 +56,14 @@ impl LatexConvertible for Expr {
     }
 }
 
-pub fn render(expr: &Expr, file: &Path) -> Result<(), Box<dyn Error>> {
-    let latex = expr.to_latex();
+impl LatexConvertible for Equation {
+    fn to_latex(&self) -> String {
+        format!("{} = {}", self.lhs.to_latex(), self.rhs.to_latex())
+    }
+}
+
+pub fn render<T: LatexConvertible>(maths: &T, file: &Path) -> Result<(), Box<dyn Error>> {
+    let latex = maths.to_latex();
 
     let client = Client::new();
     let response = client
