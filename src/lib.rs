@@ -1,3 +1,5 @@
+#![feature(box_patterns)]
+
 use std::char;
 
 pub mod eval;
@@ -6,6 +8,7 @@ pub mod gen;
 pub mod render;
 pub mod solve;
 pub mod derive;
+pub mod simplify;
 
 #[derive(PartialEq, Clone)]
 pub enum Op {

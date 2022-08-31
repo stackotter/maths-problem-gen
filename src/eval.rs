@@ -1,4 +1,4 @@
-use std::mem::swap;
+use std::{mem::swap, ops::{Mul, Add, Sub, Neg, Div}};
 
 use crate::{Expr, Op, Pair, Rational};
 
@@ -34,6 +34,10 @@ fn gcd(a: u64, b: u64) -> u64 {
 
 impl Rational {
     pub fn simplified(&self) -> Rational {
+        if self.numerator == 0 {
+            return Rational::new(0, 1);
+        }
+
         let divisor = gcd(self.numerator.abs() as u64, self.denominator);
         if divisor == 1 {
             self.to_owned()
@@ -43,6 +47,63 @@ impl Rational {
                 denominator: self.denominator / divisor,
             }
         }
+    }
+}
+
+impl Mul for Rational {
+    type Output = Rational;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Rational {
+            numerator: self.numerator * rhs.numerator,
+            denominator: self.denominator * rhs.denominator
+        }.simplified()
+    }
+}
+
+impl Add for Rational {
+    type Output = Rational;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let new_denom = lcm(self.denominator, rhs.denominator);
+        let lmult = (new_denom / self.denominator) as i64;
+        let rmult = (new_denom / rhs.denominator) as i64;
+        Rational {
+            numerator: self.numerator * lmult + rhs.numerator * rmult,
+            denominator: new_denom,
+        }.simplified()
+    }
+}
+
+impl Neg for Rational {
+    type Output = Rational;
+
+    fn neg(self) -> Self::Output {
+        Rational {
+            numerator: -self.numerator,
+            denominator: self.denominator
+        }
+    }
+}
+
+impl Sub for Rational {
+    type Output = Rational;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self + -rhs
+    }
+}
+
+impl Div for Rational {
+    type Output = Rational;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        let denom_sign = rhs.numerator.signum();
+
+        Rational {
+            numerator: self.numerator * (rhs.denominator as i64) * denom_sign,
+            denominator: self.denominator * (rhs.numerator as u64),
+        }.simplified()
     }
 }
 
@@ -56,45 +117,18 @@ pub fn eval(expr: &Expr) -> Result<Rational, EvalErr> {
         Expr::Rational(rational) => rational.to_owned(),
         Expr::Pair(pair) => {
             let lval = eval(&pair.left)?;
-            let mut rval = eval(&pair.right)?;
+            let rval = eval(&pair.right)?;
 
             match pair.op {
-                Op::Add => {
-                    let new_denom = lcm(lval.denominator, rval.denominator);
-                    let lmult = (new_denom / lval.denominator) as i64;
-                    let rmult = (new_denom / rval.denominator) as i64;
-                    Rational {
-                        numerator: lval.numerator * lmult + rval.numerator * rmult,
-                        denominator: new_denom,
-                    }
-                }
-                Op::Sub => {
-                    rval.numerator = -rval.numerator;
-
-                    eval(&Expr::Pair(Box::new(Pair::new(
-                        Expr::Rational(lval),
-                        Op::Add,
-                        Expr::Rational(rval),
-                    ))))?
-                }
-                Op::Mul => Rational {
-                    numerator: lval.numerator * rval.numerator,
-                    denominator: lval.denominator * rval.denominator,
-                },
-                Op::Div => {
-                    let denom_sign = rval.numerator.signum();
-
-                    Rational {
-                        numerator: lval.numerator * (rval.denominator as i64) * denom_sign,
-                        denominator: lval.denominator * (rval.numerator as u64),
-                    }
-                }
+                Op::Add => lval + rval,
+                Op::Sub => lval - rval,
+                Op::Mul => lval * rval,
+                Op::Div => lval / rval,
             }
         }
         Expr::Negative(expr) => {
-            let mut val = eval(expr)?;
-            val.numerator = -val.numerator;
-            val
+            let val = eval(expr)?;
+            -val
         }
         Expr::Variable(unknown) => return Err(EvalErr::EncounteredUnknown(unknown.to_owned())),
     };
