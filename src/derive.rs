@@ -45,6 +45,6 @@ pub fn derive(expr: &Expr) -> Expr {
             ))),
         },
         Expr::Negative(expr) => Expr::Negative(Box::new(derive(&expr))),
-        Expr::Variable(_) => Rational::int(1).into()
+        Expr::Variable(_) => Rational::int(1).into(),
     }
 }

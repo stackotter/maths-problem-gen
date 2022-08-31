@@ -1,10 +1,13 @@
-use crate::{Rational, Equation, Expr, eval::{eval, EvalErr}, Op, Pair};
+use crate::{
+    eval::{eval, EvalErr},
+    Equation, Expr, Op, Pair, Rational,
+};
 
 #[derive(Debug)]
 pub enum SolveErr {
     TooManyUnknowns,
     NoUnknowns,
-    FailedToEval(EvalErr)
+    FailedToEval(EvalErr),
 }
 
 impl Expr {
@@ -13,7 +16,7 @@ impl Expr {
             Expr::Rational(_) => 0,
             Expr::Pair(pair) => pair.left.unknown_count() + pair.right.unknown_count(),
             Expr::Negative(expr) => expr.unknown_count(),
-            Expr::Variable(_) => 1
+            Expr::Variable(_) => 1,
         }
     }
 }
@@ -25,9 +28,9 @@ pub fn solve(equation: &Equation) -> Result<Rational, SolveErr> {
     let unknowns = lunknowns + runknowns;
 
     if unknowns > 1 {
-        return Err(SolveErr::TooManyUnknowns)
+        return Err(SolveErr::TooManyUnknowns);
     } else if unknowns == 0 {
-        return Err(SolveErr::NoUnknowns)
+        return Err(SolveErr::NoUnknowns);
     }
 
     let mut side_with_unknown;
@@ -55,12 +58,25 @@ pub fn solve(equation: &Equation) -> Result<Rational, SolveErr> {
                 let lunknowns = pair.left.unknown_count();
                 if lunknowns == 1 {
                     side_with_unknown = pair.left;
-                    constant_side = Expr::Pair(Box::new(Pair::new(constant_side, pair.op.inverse(), pair.right)));
+                    constant_side = Expr::Pair(Box::new(Pair::new(
+                        constant_side,
+                        pair.op.inverse(),
+                        pair.right,
+                    )));
                 } else {
                     side_with_unknown = pair.right.clone();
                     match pair.op {
-                        Op::Add | Op::Mul => constant_side = Expr::Pair(Box::new(Pair::new(constant_side, pair.op.inverse(), pair.left))),
-                        Op::Div | Op::Sub => constant_side = Expr::Pair(Box::new(Pair::new(pair.left, pair.op, constant_side)))
+                        Op::Add | Op::Mul => {
+                            constant_side = Expr::Pair(Box::new(Pair::new(
+                                constant_side,
+                                pair.op.inverse(),
+                                pair.left,
+                            )))
+                        }
+                        Op::Div | Op::Sub => {
+                            constant_side =
+                                Expr::Pair(Box::new(Pair::new(pair.left, pair.op, constant_side)))
+                        }
                     }
                 }
             }

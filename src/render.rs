@@ -1,4 +1,4 @@
-use crate::{fmt::bracketize, Expr, Op, Pair, Rational, Equation};
+use crate::{fmt::bracketize, Equation, Expr, Op, Pair, Rational};
 use std::{
     error::Error,
     fs::File,
@@ -52,7 +52,7 @@ impl LatexConvertible for Expr {
             Expr::Negative(expr) => {
                 format!("-{}", expr.to_latex())
             }
-            Expr::Variable(var) => var.to_owned().into()
+            Expr::Variable(var) => var.to_owned().into(),
         }
     }
 }

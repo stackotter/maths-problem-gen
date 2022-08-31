@@ -41,7 +41,7 @@ impl Display for Expr {
             Expr::Rational(rational) => f.write_str(&format!("{}", rational)),
             Expr::Pair(pair) => f.write_str(&format!("{}", pair)),
             Expr::Negative(expr) => f.write_str(&format!("-{}", expr)),
-            Expr::Variable(var) => f.write_str(&String::from(var.to_owned()))
+            Expr::Variable(var) => f.write_str(&String::from(var.to_owned())),
         }
     }
 }
