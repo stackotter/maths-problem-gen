@@ -1,3 +1,6 @@
 [submodule "math-api"]
 	path = math-api
 	url = https://github.com/chialab/math-api.git
+[submodule "mathoid"]
+	path = mathoid
+	url = https://github.com/wikimedia/mathoid/

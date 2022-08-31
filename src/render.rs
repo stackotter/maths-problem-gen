@@ -3,7 +3,7 @@ use std::{
     error::Error,
     fs::File,
     io::{copy, Cursor},
-    path::Path,
+    path::Path, collections::HashMap,
 };
 
 use reqwest::Client;
@@ -72,16 +72,12 @@ impl<T: LatexConvertible> LatexConvertible for Answer<T> {
 pub async fn render_to_bytes<T: LatexConvertible>(maths: &T) -> Result<Vec<u8>, Box<dyn Error>> {
     let latex = maths.to_latex();
 
+    let mut params = HashMap::new();
+    params.insert("q", latex);
     let client = Client::new();
     let response = client
-        .get("http://localhost:3000/render")
-        .query(&[
-            ("input", "latex"),
-            ("source", &latex),
-            ("output", "png"),
-            ("width", "400"),
-            ("height", "400"),
-        ])
+        .post("http://localhost:10044/png")
+        .form(&params)
         .send().await?;
 
     Ok(response.bytes().await?.to_vec())
