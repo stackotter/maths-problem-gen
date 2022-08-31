@@ -1,6 +1,6 @@
 use std::{mem::swap, ops::{Mul, Add, Sub, Neg, Div}};
 
-use crate::{Expr, Op, Pair, Rational};
+use crate::{Expr, Op, Rational};
 
 fn lcm(a: u64, b: u64) -> u64 {
     let mut guess = if a > b { a } else { b };

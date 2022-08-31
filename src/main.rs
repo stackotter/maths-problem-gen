@@ -1,6 +1,5 @@
-use maths_problem_gen::{simplify::simplify, Expr, Op, Pair};
-
-use maths_problem_gen::{derive::derive, gen::gen_equation, solve::solve};
+use std::path::Path;
+use maths_problem_gen::{render::render, solve::solve, gen::gen_equation, gen::gen_simple_add};
 
 fn main() {
     // let expr = gen_all();
@@ -15,15 +14,17 @@ fn main() {
     let answer = solve(&equation).expect("Should be solvable");
     println!("{}, x = {}", equation, answer);
 
-    // render::render(&equation, &Path::new("out.png")).expect("render to pdf should succeed");
+    render(&equation, &Path::new("out.png")).expect("render to pdf should succeed");
 
-    println!("{}", simplify(&derive(&equation.lhs)));
-    println!(
-        "{}",
-        simplify(&derive(&Expr::Pair(Box::new(Pair::new(
-            Expr::Variable('x'),
-            Op::Mul,
-            Expr::Variable('x')
-        )))))
-    );
+    // println!("{}", simplify(&derive(&equation.lhs)));
+    // println!(
+    //     "{}",
+    //     simplify(&derive(&Expr::Pair(Box::new(Pair::new(
+    //         Expr::Variable('x'),
+    //         Op::Mul,
+    //         Expr::Variable('x')
+    //     )))))
+    // );
+
+    //println!("{}", gen_simple_add(5));
 }

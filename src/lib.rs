@@ -2,13 +2,13 @@
 
 use std::char;
 
+pub mod derive;
 pub mod eval;
 pub mod fmt;
 pub mod gen;
 pub mod render;
-pub mod solve;
-pub mod derive;
 pub mod simplify;
+pub mod solve;
 
 #[derive(PartialEq, Clone)]
 pub enum Op {
@@ -38,7 +38,7 @@ impl Op {
             Op::Add => Op::Sub,
             Op::Sub => Op::Add,
             Op::Mul => Op::Div,
-            Op::Div => Op::Mul
+            Op::Div => Op::Mul,
         }
     }
 }
@@ -66,25 +66,17 @@ impl Pair {
 
         let mut lrequires = lprecedence < precedence;
         let mut rrequires =
-            rprecedence < precedence || (rprecedence == precedence && self.op.is_associative());
+            rprecedence < precedence || (rprecedence == precedence && !self.op.is_associative());
 
         if division_as_fraction {
             match &self.left {
                 Expr::Rational(_) => lrequires = false,
-                Expr::Pair(pair) => {
-                    if pair.op == Op::Div {
-                        lrequires = false
-                    }
-                }
+                Expr::Pair(pair) if pair.op == Op::Div => lrequires = false,
                 _ => (),
             }
             match &self.right {
                 Expr::Rational(_) => rrequires = false,
-                Expr::Pair(pair) => {
-                    if pair.op == Op::Div {
-                        rrequires = false
-                    }
-                }
+                Expr::Pair(pair) if pair.op == Op::Div => rrequires = false,
                 _ => (),
             }
         }
@@ -99,7 +91,7 @@ impl Into<Expr> for Pair {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Rational {
     pub numerator: i64,
     pub denominator: u64,
@@ -123,7 +115,7 @@ impl Expr {
             Expr::Rational(_) => 2,
             Expr::Pair(pair) => pair.op.precedence(),
             Expr::Negative(_) => 1,
-            Expr::Variable(_) => 3
+            Expr::Variable(_) => 3,
         }
     }
 }
