@@ -19,17 +19,49 @@ pub fn rand_rational() -> Rational {
     Rational::new(numerator, denominator)
 }
 
-pub fn gen<Rand: Fn() -> Rational>(depth: u64, answer: Rational, rand_term: &Rand, previous_op: Option<Op>) -> Expr {
+pub fn factors(n: Rational) -> Vec<Rational> {
+    if n.denominator != 1 {
+        return vec![];
+    }
+
+    let numerators = (1..(n.numerator + 1))
+        .into_iter()
+        .filter(|&x| n.numerator % x == 0)
+        .collect::<Vec<i64>>();
+    numerators
+        .into_iter()
+        .map(|numerator| Rational::int(numerator))
+        .collect()
+}
+
+pub fn gen<Rand: Fn() -> Rational>(
+    depth: u64,
+    answer: Rational,
+    rand_term: &Rand,
+    previous_op: Option<Op>,
+) -> Expr {
     if depth == 0 {
         answer.into()
     } else {
-        let mut l = rand_term();
         let mut rng = rand::thread_rng();
         let mut ops = vec![Op::Add, Op::Sub, Op::Mul, Op::Div];
         if let Some(previous_op) = previous_op {
             ops = ops.into_iter().filter(|&op| op != previous_op).collect();
         }
         let op = ops[rng.gen_range(0..(ops.len()))];
+        let mut l = if op == Op::Mul {
+            let nice_numbers: Vec<Rational> = factors(answer)
+                .into_iter()
+                .filter(|&factor| factor != Rational::int(1) && factor != answer)
+                .collect();
+            if nice_numbers.len() == 0 {
+                return gen(depth, answer, rand_term, previous_op);
+            }
+            nice_numbers[rng.gen_range(0..(nice_numbers.len()))]
+        } else {
+            rand_term()
+        };
+
         let r = match op {
             Op::Add => answer - l,
             Op::Sub => l - answer,
@@ -38,7 +70,7 @@ pub fn gen<Rand: Fn() -> Rational>(depth: u64, answer: Rational, rand_term: &Ran
                 let saved_l = l;
                 l = answer * l;
                 saved_l
-            },
+            }
         };
         let lexpr = gen(depth - 1, l, rand_term, Some(op));
         let rexpr = gen(depth - 1, r, rand_term, Some(op));
