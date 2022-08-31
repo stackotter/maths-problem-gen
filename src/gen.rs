@@ -19,28 +19,36 @@ pub fn rand_rational() -> Rational {
     Rational::new(numerator, denominator)
 }
 
-pub fn gen<Rand: Fn() -> Rational>(depth: u64, answer: Rational, rand_term: &Rand) -> Expr {
+pub fn gen<Rand: Fn() -> Rational>(depth: u64, answer: Rational, rand_term: &Rand, previous_op: Option<Op>) -> Expr {
     if depth == 0 {
         answer.into()
     } else {
-        let l = rand_term();
+        let mut l = rand_term();
         let mut rng = rand::thread_rng();
-        let op = [Op::Add, Op::Sub, Op::Mul, Op::Div][rng.gen_range(0..4)];
+        let mut ops = vec![Op::Add, Op::Sub, Op::Mul, Op::Div];
+        if let Some(previous_op) = previous_op {
+            ops = ops.into_iter().filter(|&op| op != previous_op).collect();
+        }
+        let op = ops[rng.gen_range(0..(ops.len()))];
         let r = match op {
             Op::Add => answer - l,
             Op::Sub => l - answer,
             Op::Mul => answer / l,
-            Op::Div => l / answer,
+            Op::Div => {
+                let saved_l = l;
+                l = answer * l;
+                saved_l
+            },
         };
-        let lexpr = gen(depth - 1, l, rand_term);
-        let rexpr = gen(depth - 1, r, rand_term);
+        let lexpr = gen(depth - 1, l, rand_term, Some(op));
+        let rexpr = gen(depth - 1, r, rand_term, Some(op));
         let value = pair(lexpr, op, rexpr);
         value
     }
 }
 
 pub fn gen_arithmetic(depth: u64, answer: Rational) -> Expr {
-    gen(depth, answer, &|| rand_int())
+    gen(depth, answer, &|| rand_int(), None)
 }
 
 #[derive(Debug)]
@@ -70,7 +78,7 @@ fn replace_random_constant(expr: &mut Expr, replacement: Expr) -> Result<Rationa
 
 pub fn gen_backtrack(depth: u64) -> (Equation, Rational) {
     let rhs = rand_int();
-    let mut lhs = gen(depth, rhs, &|| rand_int());
+    let mut lhs = gen(depth, rhs, &|| rand_int(), None);
 
     let replaced_term = replace_random_constant(&mut lhs, Expr::Variable('x'))
         .expect("Generated expr shouldn't contain variable yet");
