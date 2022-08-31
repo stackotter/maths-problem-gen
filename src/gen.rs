@@ -83,3 +83,22 @@ pub fn gen_backtrack(depth: u64) -> (Equation, Rational) {
         replaced_term,
     )
 }
+
+pub fn gen_choices(answer: Rational, count: usize) -> Vec<Rational> {
+    let mut answers = vec![];
+
+    let mut offsets = vec![Rational::new(1, 2), Rational::int(1), Rational::int(2), Rational::new(2, 3), Rational::int(3), Rational::int(4), Rational::int(5), Rational::new(4, 5)];
+
+    for _ in 0..count {
+        let mut rng = rand::thread_rng();
+        let index = rng.gen_range(0..offsets.len());
+        let offset = offsets.remove(index);
+        if rng.gen_bool(0.5) {
+            answers.push(answer - offset);
+        } else {
+            answers.push(answer + offset);
+        }
+    }
+
+    answers
+}

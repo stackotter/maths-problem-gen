@@ -1,4 +1,4 @@
-use crate::{fmt::bracketize, Equation, Expr, Op, Pair, Rational};
+use crate::{fmt::bracketize, Equation, Expr, Op, Pair, Rational, Answer};
 use std::{
     error::Error,
     fs::File,
@@ -6,7 +6,7 @@ use std::{
     path::Path,
 };
 
-use reqwest::blocking::Client;
+use reqwest::Client;
 
 pub trait LatexConvertible {
     fn to_latex(&self) -> String;
@@ -63,7 +63,13 @@ impl LatexConvertible for Equation {
     }
 }
 
-pub fn render<T: LatexConvertible>(maths: &T, file: &Path) -> Result<(), Box<dyn Error>> {
+impl<T: LatexConvertible> LatexConvertible for Answer<T> {
+    fn to_latex(&self) -> String {
+        format!("{}) \\ {}", self.option, self.answer.to_latex())
+    }
+}
+
+pub async fn render_to_bytes<T: LatexConvertible>(maths: &T) -> Result<Vec<u8>, Box<dyn Error>> {
     let latex = maths.to_latex();
 
     let client = Client::new();
@@ -76,10 +82,16 @@ pub fn render<T: LatexConvertible>(maths: &T, file: &Path) -> Result<(), Box<dyn
             ("width", "400"),
             ("height", "400"),
         ])
-        .send()?;
+        .send().await?;
 
+    Ok(response.bytes().await?.to_vec())
+}
+
+pub async fn render_to_file<T: LatexConvertible>(maths: &T, file: &Path) -> Result<(), Box<dyn Error>> {
+    let bytes = render_to_bytes(maths).await?;
     let mut file = File::create(file)?;
-    let mut content = Cursor::new(response.bytes()?);
+    let mut content = Cursor::new(bytes);
     copy(&mut content, &mut file)?;
     Ok(())
 }
+

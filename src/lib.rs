@@ -2,6 +2,8 @@
 
 use std::char;
 
+use render::LatexConvertible;
+
 pub mod derive;
 pub mod eval;
 pub mod fmt;
@@ -123,6 +125,11 @@ impl Expr {
 pub struct Equation {
     pub lhs: Expr,
     pub rhs: Expr,
+}
+
+pub struct Answer<T: LatexConvertible> {
+    pub option: char,
+    pub answer: T
 }
 
 impl Rational {
