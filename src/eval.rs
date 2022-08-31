@@ -102,7 +102,7 @@ impl Div for Rational {
 
         Rational {
             numerator: self.numerator * (rhs.denominator as i64) * denom_sign,
-            denominator: self.denominator * (rhs.numerator as u64),
+            denominator: self.denominator * (rhs.numerator.abs() as u64),
         }.simplified()
     }
 }

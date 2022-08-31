@@ -10,7 +10,7 @@ pub mod render;
 pub mod simplify;
 pub mod solve;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum Op {
     Add,
     Sub,
@@ -91,7 +91,7 @@ impl Into<Expr> for Pair {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Rational {
     pub numerator: i64,
     pub denominator: u64,

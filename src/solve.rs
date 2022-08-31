@@ -59,10 +59,9 @@ pub fn solve(equation: &Equation) -> Result<Rational, SolveErr> {
                 } else {
                     side_with_unknown = pair.right.clone();
                     match pair.op {
-                        Op::Add | Op::Mul => constant_side = Expr::Pair(Box::new(Pair::new(constant_side, pair.op.inverse(), pair.right))),
+                        Op::Add | Op::Mul => constant_side = Expr::Pair(Box::new(Pair::new(constant_side, pair.op.inverse(), pair.left))),
                         Op::Div | Op::Sub => constant_side = Expr::Pair(Box::new(Pair::new(pair.left, pair.op, constant_side)))
                     }
-
                 }
             }
         }

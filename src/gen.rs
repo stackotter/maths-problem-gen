@@ -1,22 +1,9 @@
 use rand::{self, Rng};
 
-use crate::Equation;
-use crate::{
-    Expr,
-    Op::{self, Add, Div, Mul},
-    Pair, Rational,
-};
-
-fn int(int: i64) -> Expr {
-    Rational::int(int).into()
-}
+use crate::{Equation, Expr, Op, Pair, Rational};
 
 fn pair(l: Expr, op: Op, r: Expr) -> Expr {
     Pair::new(l, op, r).into()
-}
-
-fn expr_add(l: Expr, r: Expr) -> Expr {
-    pair(l.into(), Add, r.into())
 }
 
 pub fn rand_int() -> Rational {
@@ -32,43 +19,67 @@ pub fn rand_rational() -> Rational {
     Rational::new(numerator, denominator)
 }
 
-pub fn gen_add<F: Fn() -> Expr>(term_count: u64, rand_term: F) -> Expr {
-    let l = rand_term();
-    if term_count == 1 {
-        l
+pub fn gen<Rand: Fn() -> Rational>(depth: u64, answer: Rational, rand_term: &Rand) -> Expr {
+    if depth == 0 {
+        answer.into()
     } else {
-        let r = gen_add(term_count - 1, rand_term);
-        expr_add(l, r)
+        let l = rand_term();
+        let mut rng = rand::thread_rng();
+        let op = [Op::Add, Op::Sub, Op::Mul, Op::Div][rng.gen_range(0..4)];
+        let r = match op {
+            Op::Add => answer - l,
+            Op::Sub => l - answer,
+            Op::Mul => answer / l,
+            Op::Div => l / answer,
+        };
+        let lexpr = gen(depth - 1, l, rand_term);
+        let rexpr = gen(depth - 1, r, rand_term);
+        let value = pair(lexpr, op, rexpr);
+        value
     }
 }
 
-pub fn gen_simple_add(term_count: u64) -> Expr {
-    gen_add(term_count, || rand_int().into())
+pub fn gen_arithmetic(depth: u64, answer: Rational) -> Expr {
+    gen(depth, answer, &|| rand_int())
 }
 
-pub fn gen_all() -> Expr {
-    pair(
-        pair(int(8), Add, int(3)),
-        Add,
-        pair(
-            int(1),
-            Div,
-            pair(Rational::new(2, 3).into(), Mul, Rational::new(6, 2).into()),
-        ),
+#[derive(Debug)]
+enum GenErr {
+    UnexpectedVariable,
+}
+
+fn replace_random_constant(expr: &mut Expr, replacement: Expr) -> Result<Rational, GenErr> {
+    match expr {
+        Expr::Rational(rational) => {
+            let rational = rational.clone();
+            *expr = replacement;
+            Ok(rational.to_owned())
+        }
+        Expr::Negative(inner) => replace_random_constant(&mut *inner, replacement),
+        Expr::Variable(_) => Err(GenErr::UnexpectedVariable),
+        Expr::Pair(pair) => {
+            let mut rng = rand::thread_rng();
+            if rng.gen_bool(0.5) {
+                replace_random_constant(&mut pair.left, replacement)
+            } else {
+                replace_random_constant(&mut pair.right, replacement)
+            }
+        }
+    }
+}
+
+pub fn gen_backtrack(depth: u64) -> (Equation, Rational) {
+    let rhs = rand_int();
+    let mut lhs = gen(depth, rhs, &|| rand_int());
+
+    let replaced_term = replace_random_constant(&mut lhs, Expr::Variable('x'))
+        .expect("Generated expr shouldn't contain variable yet");
+
+    (
+        Equation {
+            lhs,
+            rhs: rhs.into(),
+        },
+        replaced_term,
     )
-}
-
-pub fn gen_equation() -> Equation {
-    Equation {
-        lhs: pair(
-            pair(Expr::Variable('x'), Add, int(3)),
-            Add,
-            pair(
-                int(1),
-                Div,
-                pair(Rational::new(2, 3).into(), Mul, Rational::new(6, 2).into()),
-            ),
-        ),
-        rhs: Expr::Rational(Rational::new(23, 2)),
-    }
 }
