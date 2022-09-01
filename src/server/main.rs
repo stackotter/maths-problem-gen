@@ -23,7 +23,7 @@ async fn generate_problem(problems_dir: &str) -> Result<Problem, Box<dyn Error>>
 
     let file = format!("{problem_uuid}_problem.png");
     let path = format!("{}/{}", problems_dir, &file);
-    render_to_file(&equation, &Path::new(&path)).await?;
+    render_to_file(&equation, &Path::new(&path), false).await?;
     let mut choice_urls = vec![];
 
     for (i, choice) in choices.iter().enumerate() {
@@ -38,6 +38,7 @@ async fn generate_problem(problems_dir: &str) -> Result<Problem, Box<dyn Error>>
                 },
             },
             &Path::new(&path),
+            true
         )
         .await?;
         choice_urls.push(format!("/problem/{file}"));

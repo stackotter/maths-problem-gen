@@ -69,11 +69,15 @@ impl<T: LatexConvertible> LatexConvertible for Answer<T> {
     }
 }
 
-pub async fn render_to_bytes<T: LatexConvertible>(maths: &T) -> Result<Vec<u8>, Box<dyn Error>> {
+pub async fn render_to_bytes<T: LatexConvertible>(maths: &T, inline: bool) -> Result<Vec<u8>, Box<dyn Error>> {
     let latex = maths.to_latex();
 
     let mut params = HashMap::new();
     params.insert("q", latex);
+    if inline {
+        params.insert("type", "inline-tex".into());
+    }
+
     let client = Client::new();
     let response = client
         .post("http://localhost:10044/png")
@@ -83,8 +87,8 @@ pub async fn render_to_bytes<T: LatexConvertible>(maths: &T) -> Result<Vec<u8>, 
     Ok(response.bytes().await?.to_vec())
 }
 
-pub async fn render_to_file<T: LatexConvertible>(maths: &T, file: &Path) -> Result<(), Box<dyn Error>> {
-    let bytes = render_to_bytes(maths).await?;
+pub async fn render_to_file<T: LatexConvertible>(maths: &T, file: &Path, inline: bool) -> Result<(), Box<dyn Error>> {
+    let bytes = render_to_bytes(maths, inline).await?;
     let mut file = File::create(file)?;
     let mut content = Cursor::new(bytes);
     copy(&mut content, &mut file)?;
