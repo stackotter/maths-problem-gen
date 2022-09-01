@@ -12,7 +12,7 @@ pub mod render;
 pub mod simplify;
 pub mod solve;
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum Op {
     Add,
     Sub,
@@ -48,7 +48,7 @@ impl Op {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Pair {
     pub left: Expr,
     pub right: Expr,
@@ -60,7 +60,11 @@ impl Pair {
         Self { left, op, right }
     }
 
-    pub fn requires_brackets(&self, division_as_fraction: bool, inline_powers: bool) -> (bool, bool) {
+    pub fn requires_brackets(
+        &self,
+        division_as_fraction: bool,
+        inline_powers: bool,
+    ) -> (bool, bool) {
         if self.op == Op::Div && division_as_fraction {
             return (false, false);
         }
@@ -118,7 +122,7 @@ pub enum ExactVal {
     Rational(Rational),
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Expr {
     Rational(Rational),
     Pair(Box<Pair>),

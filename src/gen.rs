@@ -1,6 +1,6 @@
 use rand::{self, Rng};
 
-use crate::{Equation, Expr, Op, Pair, Rational};
+use crate::{simplify::simplify, Equation, Expr, Op, Pair, Rational};
 
 fn pair(l: Expr, op: Op, r: Expr) -> Expr {
     Pair::new(l, op, r).into()
@@ -146,4 +146,33 @@ pub fn gen_choices(answer: Rational, count: usize) -> Vec<Rational> {
     }
 
     answers
+}
+
+pub fn gen_polynomial(degree: u64) -> Expr {
+    let mut rng = rand::thread_rng();
+    let mut pair = Pair::new(Rational::int(0).into(), Op::Add, Rational::int(0).into());
+    for exponent in (0..=degree).rev() {
+        let coefficient = rng.gen_range(-10..10);
+        if coefficient == 0 {
+            continue;
+        }
+
+        pair = Pair::new(
+            pair.into(),
+            Op::Add,
+            Pair::new(
+                Rational::int(coefficient).into(),
+                Op::Mul,
+                Pair::new(
+                    Expr::Variable('x'),
+                    Op::Pow,
+                    Rational::int(exponent as i64).into(),
+                )
+                .into(),
+            )
+            .into(),
+        );
+    }
+
+    simplify(&pair.into())
 }

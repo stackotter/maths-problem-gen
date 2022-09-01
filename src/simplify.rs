@@ -11,6 +11,12 @@ pub fn simplify(expr: &Expr) -> Expr {
             let lsimplified = simplify(&pair.left);
             let rsimplified = simplify(&pair.right);
 
+            if let Ok(answer) =
+                eval(&Pair::new(lsimplified.clone(), pair.op, rsimplified.clone()).into())
+            {
+                return answer.into();
+            }
+
             match pair.op {
                 Op::Mul => match (lsimplified.clone(), rsimplified.clone()) {
                     (Expr::Rational(rational), _) | (_, Expr::Rational(rational))
@@ -19,12 +25,12 @@ pub fn simplify(expr: &Expr) -> Expr {
                         return Rational::int(0).into()
                     }
                     (
+                        Expr::Rational(rational),
                         Expr::Pair(box Pair {
                             left: Expr::Rational(coefficient),
                             op: Op::Mul,
                             right: unknown,
                         }),
-                        Expr::Rational(rational),
                     ) => {
                         let new_coefficient = coefficient * rational;
                         return Expr::Pair(Box::new(Pair::new(
@@ -39,11 +45,25 @@ pub fn simplify(expr: &Expr) -> Expr {
                     (Expr::Negative(linner), Expr::Negative(rinner)) => {
                         return Expr::Pair(Box::new(Pair::new(*linner, Op::Mul, *rinner)));
                     }
+                    (Expr::Negative(box left), right) | (left, Expr::Negative(box right)) => {
+                        return Expr::Negative(Box::new(Pair::new(left, Op::Mul, right).into()));
+                    }
+                    (Expr::Rational(rational), right) if rational.numerator < 1 => {
+                        return Expr::Negative(Box::new(
+                            Pair::new((-rational).into(), Op::Mul, right).into(),
+                        ));
+                    }
+                    (Expr::Rational(rational), right) if rational == Rational::int(1) => {
+                        return right;
+                    }
                     _ => (),
                 },
                 Op::Add => match (lsimplified.clone(), rsimplified.clone()) {
                     (Expr::Rational(rational), right) if rational.numerator == 0 => return right,
                     (left, Expr::Rational(rational)) if rational.numerator == 0 => return left,
+                    (left, Expr::Rational(rational)) if rational.numerator < 0 => {
+                        return Pair::new(left, Op::Sub, (-rational).into()).into()
+                    }
                     (left, Expr::Negative(right)) => {
                         return Expr::Pair(Box::new(Pair::new(left, Op::Sub, *right)))
                     }
@@ -75,9 +95,10 @@ pub fn simplify(expr: &Expr) -> Expr {
                     (left, Expr::Rational(rational)) if rational.numerator == 0 => return left,
                     _ => (),
                 },
-                Op::Pow if pair.right == Rational::int(0).into() => {
+                Op::Pow if rsimplified == Rational::int(0).into() => {
                     return Rational::int(1).into();
                 }
+                Op::Pow if rsimplified == Rational::int(1).into() => return lsimplified.clone(),
                 _ => (),
             }
 

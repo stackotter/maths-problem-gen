@@ -1,8 +1,9 @@
-use maths_problem_gen::simplify::simplify;
+use maths_problem_gen::{gen::gen_polynomial, simplify::simplify};
 use std::path::Path;
 
 use maths_problem_gen::{
-    derive::derive, gen::gen_backtrack, render::render_to_file, solve::solve, Expr, Pair, Rational, Op,
+    derive::derive, gen::gen_backtrack, render::render_to_file, solve::solve, Expr, Op, Pair,
+    Rational,
 };
 use tokio;
 
@@ -13,15 +14,8 @@ async fn main() {
     // let solved_answer = solve(&equation).expect("Should be solvable");
     // assert_eq!(answer, solved_answer);
 
-    let lhs = Expr::Pair(Box::new(Pair::new(
-        Rational::int(5).into(),
-        Op::Sub,
-        Expr::Pair(Box::new(Pair::new(
-            Expr::Variable('x'),
-            Op::Pow,
-            Rational::int(5).into(),
-        ))),
-    )));
+    let lhs = gen_polynomial(3);
+    println!("{:?}", lhs);
 
     let ddx = simplify(&derive(&lhs));
 
