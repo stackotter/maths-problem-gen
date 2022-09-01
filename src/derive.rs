@@ -43,6 +43,29 @@ pub fn derive(expr: &Expr) -> Expr {
                     pair.right.clone(),
                 ))),
             ))),
+            Op::Pow => {
+                if pair.right.unknown_count() == 0 {
+                    Expr::Pair(Box::new(Pair::new(
+                        Expr::Pair(Box::new(Pair::new(
+                            pair.right.clone(),
+                            Op::Sub,
+                            Rational::int(1).into(),
+                        ))),
+                        Op::Mul,
+                        Expr::Pair(Box::new(Pair::new(
+                            pair.left.clone(),
+                            Op::Pow,
+                            Expr::Pair(Box::new(Pair::new(
+                                pair.right.clone(),
+                                Op::Sub,
+                                Rational::int(1).into(),
+                            ))),
+                        ))),
+                    )))
+                } else {
+                    unimplemented!();
+                }
+            }
         },
         Expr::Negative(expr) => Expr::Negative(Box::new(derive(&expr))),
         Expr::Variable(_) => Rational::int(1).into(),

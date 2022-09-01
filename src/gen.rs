@@ -49,7 +49,7 @@ pub fn gen<Rand: Fn() -> Rational>(
             ops = ops.into_iter().filter(|&op| op != previous_op).collect();
         }
         let mut op = ops[rng.gen_range(0..(ops.len()))];
-        let mut l = match op {
+        let l = match op {
             Op::Mul => {
                 let nice_numbers: Vec<Rational> = factors(answer)
                     .into_iter()
@@ -71,13 +71,15 @@ pub fn gen<Rand: Fn() -> Rational>(
                 l
             }
             Op::Div => rand_term() * answer,
+            Op::Pow => unreachable!(),
         };
 
         let r = match op {
             Op::Add => answer - l,
             Op::Sub => l - answer,
             Op::Mul => answer / l,
-            Op::Div => l / answer
+            Op::Div => l / answer,
+            Op::Pow => unreachable!(),
         };
         let lexpr = gen(depth - 1, l, rand_term, Some(op));
         let rexpr = gen(depth - 1, r, rand_term, Some(op));

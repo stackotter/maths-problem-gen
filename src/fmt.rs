@@ -12,6 +12,7 @@ impl Display for Op {
             Op::Sub => "-",
             Op::Mul => "*",
             Op::Div => "/",
+            Op::Pow => "^"
         };
         f.write_str(&c)
     }
@@ -19,7 +20,7 @@ impl Display for Op {
 
 impl Display for Pair {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let (lrequires_brackets, rrequires_brackets) = self.requires_brackets(false);
+        let (lrequires_brackets, rrequires_brackets) = self.requires_brackets(false, true);
 
         let mut l = format!("{}", self.left);
         let mut r = format!("{}", self.right);

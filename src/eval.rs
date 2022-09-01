@@ -107,6 +107,29 @@ impl Div for Rational {
     }
 }
 
+impl Rational {
+    fn pow(self, exponent: Rational) -> Rational {
+        if exponent.denominator != 1 {
+            unimplemented!("Fractional exponents not yet implemented");
+        }
+
+        if exponent.numerator == 0 {
+            return Rational::int(1);
+        }
+
+        let mut result = self;
+        for _ in 0..exponent.numerator.abs() {
+            result = result * exponent;
+        }
+
+        if exponent.numerator > 0 {
+            result
+        } else {
+            Rational::int(1) / result
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum EvalErr {
     EncounteredUnknown(char),
@@ -124,6 +147,7 @@ pub fn eval(expr: &Expr) -> Result<Rational, EvalErr> {
                 Op::Sub => lval - rval,
                 Op::Mul => lval * rval,
                 Op::Div => lval / rval,
+                Op::Pow => lval.pow(rval)
             }
         }
         Expr::Negative(expr) => {

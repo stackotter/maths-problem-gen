@@ -25,7 +25,7 @@ impl LatexConvertible for Rational {
 
 impl LatexConvertible for Pair {
     fn to_latex(&self) -> String {
-        let (lrequires_brackets, rrequires_brackets) = self.requires_brackets(true);
+        let (lrequires_brackets, rrequires_brackets) = self.requires_brackets(true, false);
 
         let mut l: String = self.left.to_latex();
         let mut r: String = self.right.to_latex();
@@ -39,8 +39,24 @@ impl LatexConvertible for Pair {
 
         match self.op {
             Op::Add | Op::Sub => format!("{} {} {}", l, self.op, r),
-            Op::Mul => format!("{} \\times {}", l, r),
-            Op::Div => format!("\\frac{{{}}}{{{}}}", l, r),
+            Op::Mul => {
+                if rrequires_brackets || lrequires_brackets {
+                    return format!("{l} {r}");
+                }
+                match self.right {
+                    Expr::Variable(_)
+                    | Expr::Pair(box Pair {
+                        left: Expr::Variable(_),
+                        op: Op::Pow,
+                        ..
+                    }) => {
+                        format!("{l} {r}")
+                    }
+                    _ => format!("{l} \\times {r}"),
+                }
+            }
+            Op::Div => format!("\\frac{{{l}}}{{{r}}}"),
+            Op::Pow => format!("{l}^{{{r}}}"),
         }
     }
 }

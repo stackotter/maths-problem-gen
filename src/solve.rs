@@ -11,7 +11,7 @@ pub enum SolveErr {
 }
 
 impl Expr {
-    fn unknown_count(&self) -> u64 {
+    pub fn unknown_count(&self) -> u64 {
         match self {
             Expr::Rational(_) => 0,
             Expr::Pair(pair) => pair.left.unknown_count() + pair.right.unknown_count(),
@@ -58,11 +58,23 @@ pub fn solve(equation: &Equation) -> Result<Rational, SolveErr> {
                 let lunknowns = pair.left.unknown_count();
                 if lunknowns == 1 {
                     side_with_unknown = pair.left;
-                    constant_side = Expr::Pair(Box::new(Pair::new(
-                        constant_side,
-                        pair.op.inverse(),
-                        pair.right,
-                    )));
+                    if pair.op == Op::Pow {
+                        constant_side = Expr::Pair(Box::new(Pair::new(
+                            constant_side,
+                            Op::Pow,
+                            Expr::Pair(Box::new(Pair::new(
+                                Rational::int(1).into(),
+                                Op::Div,
+                                pair.right,
+                            ))),
+                        )))
+                    } else {
+                        constant_side = Expr::Pair(Box::new(Pair::new(
+                            constant_side,
+                            pair.op.inverse(),
+                            pair.right,
+                        )));
+                    }
                 } else {
                     side_with_unknown = pair.right.clone();
                     match pair.op {
@@ -77,6 +89,7 @@ pub fn solve(equation: &Equation) -> Result<Rational, SolveErr> {
                             constant_side =
                                 Expr::Pair(Box::new(Pair::new(pair.left, pair.op, constant_side)))
                         }
+                        Op::Pow => unimplemented!("Logs not implemented yet"),
                     }
                 }
             }

@@ -18,6 +18,7 @@ pub enum Op {
     Sub,
     Mul,
     Div,
+    Pow,
 }
 
 impl Op {
@@ -25,13 +26,14 @@ impl Op {
         match self {
             Op::Add | Op::Sub => 1,
             Op::Mul | Op::Div => 2,
+            Op::Pow => 3,
         }
     }
 
     pub fn is_associative(&self) -> bool {
         match self {
             Op::Add | Op::Mul => true,
-            Op::Sub | Op::Div => false,
+            Op::Sub | Op::Div | Op::Pow => false,
         }
     }
 
@@ -41,11 +43,12 @@ impl Op {
             Op::Sub => Op::Add,
             Op::Mul => Op::Div,
             Op::Div => Op::Mul,
+            Op::Pow => Op::Pow, // reciprocal power
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Pair {
     pub left: Expr,
     pub right: Expr,
@@ -57,7 +60,7 @@ impl Pair {
         Self { left, op, right }
     }
 
-    pub fn requires_brackets(&self, division_as_fraction: bool) -> (bool, bool) {
+    pub fn requires_brackets(&self, division_as_fraction: bool, inline_powers: bool) -> (bool, bool) {
         if self.op == Op::Div && division_as_fraction {
             return (false, false);
         }
@@ -81,6 +84,10 @@ impl Pair {
                 Expr::Pair(pair) if pair.op == Op::Div => rrequires = false,
                 _ => (),
             }
+        }
+
+        if self.op == Op::Pow && !inline_powers {
+            rrequires = false;
         }
 
         (lrequires, rrequires)
@@ -111,7 +118,7 @@ pub enum ExactVal {
     Rational(Rational),
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Expr {
     Rational(Rational),
     Pair(Box<Pair>),
@@ -137,7 +144,7 @@ pub struct Equation {
 
 pub struct Answer<T: LatexConvertible> {
     pub option: char,
-    pub answer: T
+    pub answer: T,
 }
 
 impl Rational {

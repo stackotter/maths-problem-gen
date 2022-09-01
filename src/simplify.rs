@@ -68,6 +68,16 @@ pub fn simplify(expr: &Expr) -> Expr {
                     }
                     _ => (),
                 },
+                Op::Sub => match (lsimplified.clone(), rsimplified.clone()) {
+                    (Expr::Rational(rational), right) if rational.numerator == 0 => {
+                        return Expr::Negative(Box::new(right))
+                    }
+                    (left, Expr::Rational(rational)) if rational.numerator == 0 => return left,
+                    _ => (),
+                },
+                Op::Pow if pair.right == Rational::int(0).into() => {
+                    return Rational::int(1).into();
+                }
                 _ => (),
             }
 
