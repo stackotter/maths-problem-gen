@@ -1,4 +1,4 @@
-use maths_problem_gen::{gen::gen_polynomial, simplify::simplify};
+use maths_problem_gen::{gen::gen_polynomial, simplify::simplify, Equation};
 use std::path::Path;
 
 use maths_problem_gen::{
@@ -19,11 +19,12 @@ async fn main() {
 
     let ddx = simplify(&derive(&lhs));
 
-    render_to_file(&lhs, &Path::new("lhs.png"), None, false)
-        .await
-        .expect("render to png should succeed");
+    let equation = Equation {
+        lhs: Expr::Derivative(Box::new(lhs)),
+        rhs: ddx
+    };
 
-    render_to_file(&ddx, &Path::new("ddx.png"), None, false)
+    render_to_file(&equation, &Path::new("out.png"), None, false)
         .await
         .expect("render to png should succeed");
 }

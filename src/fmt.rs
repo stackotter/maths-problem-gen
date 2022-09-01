@@ -12,7 +12,7 @@ impl Display for Op {
             Op::Sub => "-",
             Op::Mul => "*",
             Op::Div => "/",
-            Op::Pow => "^"
+            Op::Pow => "^",
         };
         f.write_str(&c)
     }
@@ -43,6 +43,7 @@ impl Display for Expr {
             Expr::Pair(pair) => f.write_str(&format!("{}", pair)),
             Expr::Negative(expr) => f.write_str(&format!("-{}", expr)),
             Expr::Variable(var) => f.write_str(&String::from(var.to_owned())),
+            Expr::Derivative(expr) => f.write_str(&format!("ddx({})", expr)),
         }
     }
 }

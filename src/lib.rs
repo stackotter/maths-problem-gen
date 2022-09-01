@@ -128,6 +128,7 @@ pub enum Expr {
     Pair(Box<Pair>),
     Negative(Box<Expr>),
     Variable(char),
+    Derivative(Box<Expr>),
 }
 
 impl Expr {
@@ -137,6 +138,7 @@ impl Expr {
             Expr::Pair(pair) => pair.op.precedence(),
             Expr::Negative(_) => 1,
             Expr::Variable(_) => 3,
+            Expr::Derivative(_) => 4,
         }
     }
 }

@@ -70,6 +70,7 @@ impl LatexConvertible for Expr {
                 format!("-{}", expr.to_latex())
             }
             Expr::Variable(var) => var.to_owned().into(),
+            Expr::Derivative(expr) => format!("\\frac{{d}}{{dx}}({})", expr.to_latex()),
         }
     }
 }

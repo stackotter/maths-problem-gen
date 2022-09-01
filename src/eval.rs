@@ -1,6 +1,9 @@
-use std::{mem::swap, ops::{Mul, Add, Sub, Neg, Div}};
+use std::{
+    mem::swap,
+    ops::{Add, Div, Mul, Neg, Sub},
+};
 
-use crate::{Expr, Op, Rational};
+use crate::{derive::derive, Expr, Op, Rational};
 
 fn lcm(a: u64, b: u64) -> u64 {
     let mut guess = if a > b { a } else { b };
@@ -56,8 +59,9 @@ impl Mul for Rational {
     fn mul(self, rhs: Self) -> Self::Output {
         Rational {
             numerator: self.numerator * rhs.numerator,
-            denominator: self.denominator * rhs.denominator
-        }.simplified()
+            denominator: self.denominator * rhs.denominator,
+        }
+        .simplified()
     }
 }
 
@@ -71,7 +75,8 @@ impl Add for Rational {
         Rational {
             numerator: self.numerator * lmult + rhs.numerator * rmult,
             denominator: new_denom,
-        }.simplified()
+        }
+        .simplified()
     }
 }
 
@@ -81,7 +86,7 @@ impl Neg for Rational {
     fn neg(self) -> Self::Output {
         Rational {
             numerator: -self.numerator,
-            denominator: self.denominator
+            denominator: self.denominator,
         }
     }
 }
@@ -103,7 +108,8 @@ impl Div for Rational {
         Rational {
             numerator: self.numerator * (rhs.denominator as i64) * denom_sign,
             denominator: self.denominator * (rhs.numerator.abs() as u64),
-        }.simplified()
+        }
+        .simplified()
     }
 }
 
@@ -147,7 +153,7 @@ pub fn eval(expr: &Expr) -> Result<Rational, EvalErr> {
                 Op::Sub => lval - rval,
                 Op::Mul => lval * rval,
                 Op::Div => lval / rval,
-                Op::Pow => lval.pow(rval)
+                Op::Pow => lval.pow(rval),
             }
         }
         Expr::Negative(expr) => {
@@ -155,6 +161,7 @@ pub fn eval(expr: &Expr) -> Result<Rational, EvalErr> {
             -val
         }
         Expr::Variable(unknown) => return Err(EvalErr::EncounteredUnknown(unknown.to_owned())),
+        Expr::Derivative(expr) => eval(&derive(&expr))?,
     };
 
     Ok(answer.simplified())

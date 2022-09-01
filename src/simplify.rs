@@ -1,4 +1,4 @@
-use crate::{eval::eval, Expr, Op, Pair, Rational};
+use crate::{derive::derive, eval::eval, Expr, Op, Pair, Rational};
 
 pub fn simplify(expr: &Expr) -> Expr {
     if let Ok(answer) = eval(expr) {
@@ -48,7 +48,7 @@ pub fn simplify(expr: &Expr) -> Expr {
                     (Expr::Negative(box left), right) | (left, Expr::Negative(box right)) => {
                         return Expr::Negative(Box::new(Pair::new(left, Op::Mul, right).into()));
                     }
-                    (Expr::Rational(rational), right) if rational.numerator < 1 => {
+                    (Expr::Rational(rational), right) if rational.numerator < 0 => {
                         return Expr::Negative(Box::new(
                             Pair::new((-rational).into(), Op::Mul, right).into(),
                         ));
@@ -112,11 +112,12 @@ pub fn simplify(expr: &Expr) -> Expr {
             let simplified = simplify(inner);
             match simplified {
                 Expr::Negative(expr) => *expr,
-                Expr::Pair(_) | Expr::Rational(_) | Expr::Variable(_) => {
+                Expr::Pair(_) | Expr::Rational(_) | Expr::Variable(_) | Expr::Derivative(_) => {
                     Expr::Negative(Box::new(simplified))
                 }
             }
         }
         Expr::Variable(_) => expr.to_owned(),
+        Expr::Derivative(_) => simplify(&derive(expr)),
     }
 }

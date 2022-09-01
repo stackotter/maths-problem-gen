@@ -114,6 +114,7 @@ fn replace_random_constant(expr: &mut Expr, replacement: Expr) -> Result<Rationa
                 replace_random_constant(&mut pair.right, replacement)
             }
         }
+        Expr::Derivative(inner) => replace_random_constant(&mut *inner, replacement),
     }
 }
 
