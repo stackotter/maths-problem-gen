@@ -1,9 +1,10 @@
-use crate::{fmt::bracketize, Equation, Expr, Op, Pair, Rational, Answer};
+use crate::{fmt::bracketize, Answer, Equation, Expr, Op, Pair, Rational};
 use std::{
+    collections::HashMap,
     error::Error,
     fs::File,
     io::{copy, Cursor},
-    path::Path, collections::HashMap,
+    path::Path,
 };
 
 use reqwest::Client;
@@ -69,7 +70,12 @@ impl<T: LatexConvertible> LatexConvertible for Answer<T> {
     }
 }
 
-pub async fn render_to_bytes<T: LatexConvertible>(maths: &T, inline: bool) -> Result<Vec<u8>, Box<dyn Error>> {
+pub async fn render_to_bytes<T: LatexConvertible>(
+    maths: &T,
+    mathoid_server: Option<&str>,
+    inline: bool,
+) -> Result<Vec<u8>, Box<dyn Error>> {
+    let mathoid_server = mathoid_server.unwrap_or("http://localhost:10044".into());
     let latex = maths.to_latex();
 
     let mut params = HashMap::new();
@@ -80,18 +86,23 @@ pub async fn render_to_bytes<T: LatexConvertible>(maths: &T, inline: bool) -> Re
 
     let client = Client::new();
     let response = client
-        .post("http://localhost:10044/png")
+        .post(&format!("{mathoid_server}/png"))
         .form(&params)
-        .send().await?;
+        .send()
+        .await?;
 
     Ok(response.bytes().await?.to_vec())
 }
 
-pub async fn render_to_file<T: LatexConvertible>(maths: &T, file: &Path, inline: bool) -> Result<(), Box<dyn Error>> {
-    let bytes = render_to_bytes(maths, inline).await?;
+pub async fn render_to_file<T: LatexConvertible>(
+    maths: &T,
+    file: &Path,
+    mathoid_server: Option<&str>,
+    inline: bool,
+) -> Result<(), Box<dyn Error>> {
+    let bytes = render_to_bytes(maths, mathoid_server, inline).await?;
     let mut file = File::create(file)?;
     let mut content = Cursor::new(bytes);
     copy(&mut content, &mut file)?;
     Ok(())
 }
-

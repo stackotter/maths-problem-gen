@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate rocket;
 
-use std::path::PathBuf;
 use maths_problem_gen::gen::gen_backtrack;
 use maths_problem_gen::{gen::gen_choices, render::render_to_file, Answer, Equation, Expr};
 use rand::Rng;
@@ -10,9 +9,13 @@ use rocket::{
     serde::{json::Json, Serialize},
     State,
 };
+use std::env;
+use std::path::PathBuf;
 use std::{error::Error, fs, path::Path};
 
 async fn generate_problem(problems_dir: &str) -> Result<Problem, Box<dyn Error>> {
+    let env_var = env::var("mathoid_server").ok();
+    let mathoid_server: Option<&str> = env_var.as_deref();
     let problem_uuid = uuid::Uuid::new_v4();
     let (equation, answer) = gen_backtrack(2);
 
@@ -23,7 +26,7 @@ async fn generate_problem(problems_dir: &str) -> Result<Problem, Box<dyn Error>>
 
     let file = format!("{problem_uuid}_problem.png");
     let path = format!("{}/{}", problems_dir, &file);
-    render_to_file(&equation, &Path::new(&path), false).await?;
+    render_to_file(&equation, &Path::new(&path), mathoid_server, false).await?;
     let mut choice_urls = vec![];
 
     for (i, choice) in choices.iter().enumerate() {
@@ -38,7 +41,8 @@ async fn generate_problem(problems_dir: &str) -> Result<Problem, Box<dyn Error>>
                 },
             },
             &Path::new(&path),
-            true
+            mathoid_server,
+            true,
         )
         .await?;
         choice_urls.push(format!("/problem/{file}"));
