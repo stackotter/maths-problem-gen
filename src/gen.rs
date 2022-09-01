@@ -8,7 +8,7 @@ fn pair(l: Expr, op: Op, r: Expr) -> Expr {
 
 pub fn rand_int() -> Rational {
     let mut rng = rand::thread_rng();
-    let n: i64 = rng.gen_range(1..35);
+    let n: i64 = rng.gen_range(1..10);
     Rational::int(n)
 }
 
