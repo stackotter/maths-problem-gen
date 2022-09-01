@@ -48,29 +48,36 @@ pub fn gen<Rand: Fn() -> Rational>(
         if let Some(previous_op) = previous_op {
             ops = ops.into_iter().filter(|&op| op != previous_op).collect();
         }
-        let op = ops[rng.gen_range(0..(ops.len()))];
-        let mut l = if op == Op::Mul {
-            let nice_numbers: Vec<Rational> = factors(answer)
-                .into_iter()
-                .filter(|&factor| factor != Rational::int(1) && factor != answer)
-                .collect();
-            if nice_numbers.len() == 0 {
-                return gen(depth, answer, rand_term, previous_op);
+        let mut op = ops[rng.gen_range(0..(ops.len()))];
+        let mut l = match op {
+            Op::Mul => {
+                let nice_numbers: Vec<Rational> = factors(answer)
+                    .into_iter()
+                    .filter(|&factor| factor != Rational::int(1) && factor != answer)
+                    .collect();
+                if nice_numbers.len() == 0 {
+                    return gen(depth, answer, rand_term, previous_op);
+                }
+                nice_numbers[rng.gen_range(0..(nice_numbers.len()))]
             }
-            nice_numbers[rng.gen_range(0..(nice_numbers.len()))]
-        } else {
-            rand_term()
+            Op::Add | Op::Sub => {
+                let mut l = rand_term();
+                if l >= answer {
+                    l = l + Rational::int(1);
+                    op = Op::Sub;
+                } else {
+                    op = Op::Add;
+                }
+                l
+            }
+            Op::Div => rand_term() * answer,
         };
 
         let r = match op {
             Op::Add => answer - l,
             Op::Sub => l - answer,
             Op::Mul => answer / l,
-            Op::Div => {
-                let saved_l = l;
-                l = answer * l;
-                saved_l
-            }
+            Op::Div => l / answer
         };
         let lexpr = gen(depth - 1, l, rand_term, Some(op));
         let rexpr = gen(depth - 1, r, rand_term, Some(op));
@@ -127,26 +134,13 @@ pub fn gen_backtrack(depth: u64) -> (Equation, Rational) {
 pub fn gen_choices(answer: Rational, count: usize) -> Vec<Rational> {
     let mut answers = vec![];
 
-    let mut offsets = vec![
-        Rational::new(1, 2),
-        Rational::int(1),
-        Rational::int(2),
-        Rational::new(2, 3),
-        Rational::int(3),
-        Rational::int(4),
-        Rational::int(5),
-        Rational::new(4, 5),
-    ];
+    let mut offsets: Vec<_> = (-4..4).collect();
 
     for _ in 0..count {
         let mut rng = rand::thread_rng();
         let index = rng.gen_range(0..offsets.len());
         let offset = offsets.remove(index);
-        if rng.gen_bool(0.5) {
-            answers.push(answer - offset);
-        } else {
-            answers.push(answer + offset);
-        }
+        answers.push(answer + Rational::int(offset));
     }
 
     answers

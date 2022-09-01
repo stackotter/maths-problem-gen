@@ -99,6 +99,14 @@ pub struct Rational {
     pub denominator: u64,
 }
 
+impl PartialOrd for Rational {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        let lfloat = self.numerator as f64 / self.denominator as f64;
+        let rfloat = other.numerator as f64 / other.denominator as f64;
+        lfloat.partial_cmp(&rfloat)
+    }
+}
+
 pub enum ExactVal {
     Rational(Rational),
 }
