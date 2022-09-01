@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  maths_problem_gen:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      mathoid_server: "http://mathoid:10044"
+  mathoid:
+    image: "wikimedia/mathoid:bad5ec8d4"
+    ports:
+      - "10044:10044"
