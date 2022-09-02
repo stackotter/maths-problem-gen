@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate rocket;
 
+use maths_problem_gen::derive::derive;
 use maths_problem_gen::gen::{gen_backtrack, gen_polynomial, gen_polynomial_choices};
 use maths_problem_gen::render::LatexConvertible;
 use maths_problem_gen::simplify::simplify;
@@ -44,8 +45,9 @@ fn generate_multiple_choice_problem(level: u64) -> Result<(Maths, Vec<Choice>, u
             )
         }
         2 => {
-            let problem = Expr::Derivative(Box::new(gen_polynomial(4)));
-            let answer = simplify(&problem);
+            let polynomial = gen_polynomial(4);
+            let answer = simplify(&derive(&polynomial));
+            let problem = Expr::Derivative(Box::new(polynomial));
             let choices: Vec<Maths> = gen_polynomial_choices(&answer, 3)
                 .into_iter()
                 .map(|c| -> Maths { Box::new(c) })
