@@ -1,4 +1,4 @@
-use crate::{Expr, Op, Pair, Rational};
+use crate::{Expr, Func, Op, Pair, Rational};
 
 pub fn derive(expr: &Expr) -> Expr {
     match expr {
@@ -66,5 +66,14 @@ pub fn derive(expr: &Expr) -> Expr {
         Expr::Negative(expr) => Expr::Negative(Box::new(derive(&expr))),
         Expr::Variable(_) => Rational::int(1).into(),
         Expr::Derivative(expr) => derive(&derive(&expr)),
+        Expr::Func(func, inner) => Pair::new(
+            match func {
+                Func::Sine => Expr::Func(Func::Cosine, inner.to_owned()),
+                Func::Cosine => Expr::Negative(Box::new(Expr::Func(Func::Sine, inner.to_owned()))),
+            },
+            Op::Mul,
+            derive(&*inner),
+        )
+        .into(),
     }
 }

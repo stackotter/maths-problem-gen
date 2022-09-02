@@ -71,6 +71,7 @@ impl LatexConvertible for Expr {
             }
             Expr::Variable(var) => var.to_owned().into(),
             Expr::Derivative(expr) => format!("\\frac{{d}}{{dx}}({})", expr.to_latex()),
+            Expr::Func(func, inner) => format!("{}({})", func, inner.to_latex())
         }
     }
 }

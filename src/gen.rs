@@ -104,7 +104,6 @@ fn replace_random_constant(expr: &mut Expr, replacement: Expr) -> Result<Rationa
             *expr = replacement;
             Ok(rational.to_owned())
         }
-        Expr::Negative(inner) => replace_random_constant(&mut *inner, replacement),
         Expr::Variable(_) => Err(GenErr::UnexpectedVariable),
         Expr::Pair(pair) => {
             let mut rng = rand::thread_rng();
@@ -114,7 +113,9 @@ fn replace_random_constant(expr: &mut Expr, replacement: Expr) -> Result<Rationa
                 replace_random_constant(&mut pair.right, replacement)
             }
         }
-        Expr::Derivative(inner) => replace_random_constant(&mut *inner, replacement),
+        Expr::Derivative(inner) | Expr::Negative(inner) | Expr::Func(_, inner) => {
+            replace_random_constant(&mut *inner, replacement)
+        }
     }
 }
 

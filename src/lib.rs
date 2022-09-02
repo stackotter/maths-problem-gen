@@ -94,6 +94,13 @@ impl Pair {
             rrequires = false;
         }
 
+        if self.op == Op::Pow {
+            match self.left {
+                Expr::Pair(box Pair { op: Op::Pow, .. }) => lrequires = true,
+                _ => (),
+            }
+        }
+
         (lrequires, rrequires)
     }
 }
@@ -122,6 +129,12 @@ pub enum ExactVal {
     Rational(Rational),
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum Func {
+    Sine,
+    Cosine,
+}
+
 #[derive(Clone, PartialEq, Debug)]
 pub enum Expr {
     Rational(Rational),
@@ -129,6 +142,7 @@ pub enum Expr {
     Negative(Box<Expr>),
     Variable(char),
     Derivative(Box<Expr>),
+    Func(Func, Box<Expr>),
 }
 
 impl Expr {
@@ -139,6 +153,7 @@ impl Expr {
             Expr::Negative(_) => 1,
             Expr::Variable(_) => 3,
             Expr::Derivative(_) => 4,
+            Expr::Func(_, _) => 4,
         }
     }
 }

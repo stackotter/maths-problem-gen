@@ -16,9 +16,10 @@ impl Expr {
         match self {
             Expr::Rational(_) => 0,
             Expr::Pair(pair) => pair.left.unknown_count() + pair.right.unknown_count(),
-            Expr::Negative(expr) => expr.unknown_count(),
+            Expr::Negative(inner) => inner.unknown_count(),
             Expr::Variable(_) => 1,
-            Expr::Derivative(expr) => expr.unknown_count(),
+            Expr::Derivative(inner) => inner.unknown_count(),
+            Expr::Func(_, inner) => inner.unknown_count(),
         }
     }
 }
@@ -98,6 +99,7 @@ pub fn solve(equation: &Equation) -> Result<Rational, SolveErr> {
             Expr::Derivative(inner) => {
                 side_with_unknown = derive(&*inner);
             }
+            Expr::Func(_, _) => unimplemented!("Function backtracking isn't implemented"),
         }
     }
 }

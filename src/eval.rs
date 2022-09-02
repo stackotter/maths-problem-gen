@@ -3,7 +3,7 @@ use std::{
     ops::{Add, Div, Mul, Neg, Sub},
 };
 
-use crate::{derive::derive, Expr, Op, Rational};
+use crate::{derive::derive, Expr, Func, Op, Rational};
 
 fn lcm(a: u64, b: u64) -> u64 {
     let mut guess = if a > b { a } else { b };
@@ -139,6 +139,7 @@ impl Rational {
 #[derive(Debug)]
 pub enum EvalErr {
     EncounteredUnknown(char),
+    NonEvaluableFunc(Func),
 }
 
 pub fn eval(expr: &Expr) -> Result<Rational, EvalErr> {
@@ -162,6 +163,7 @@ pub fn eval(expr: &Expr) -> Result<Rational, EvalErr> {
         }
         Expr::Variable(unknown) => return Err(EvalErr::EncounteredUnknown(unknown.to_owned())),
         Expr::Derivative(expr) => eval(&derive(&expr))?,
+        Expr::Func(func, _) => return Err(EvalErr::NonEvaluableFunc(func.to_owned())),
     };
 
     Ok(answer.simplified())

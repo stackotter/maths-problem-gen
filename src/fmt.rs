@@ -1,4 +1,4 @@
-use crate::{Equation, Expr, Op, Pair, Rational};
+use crate::{Equation, Expr, Op, Pair, Rational, Func};
 use std::fmt::Display;
 
 pub fn bracketize(s: &str) -> String {
@@ -36,6 +36,16 @@ impl Display for Pair {
     }
 }
 
+impl Display for Func {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Func::Sine => "sin",
+            Func::Cosine => "cos"
+        };
+        f.write_str(s)
+    }
+}
+
 impl Display for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -44,6 +54,7 @@ impl Display for Expr {
             Expr::Negative(expr) => f.write_str(&format!("-{}", expr)),
             Expr::Variable(var) => f.write_str(&String::from(var.to_owned())),
             Expr::Derivative(expr) => f.write_str(&format!("ddx({})", expr)),
+            Expr::Func(func, inner) => f.write_str(&format!("{func}({inner})")),
         }
     }
 }

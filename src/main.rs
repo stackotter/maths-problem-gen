@@ -1,4 +1,4 @@
-use maths_problem_gen::{gen::gen_polynomial, simplify::simplify, Equation};
+use maths_problem_gen::{gen::gen_polynomial, simplify::simplify, Equation, Func};
 use std::path::Path;
 
 use maths_problem_gen::{
@@ -14,10 +14,11 @@ async fn main() {
     // let solved_answer = solve(&equation).expect("Should be solvable");
     // assert_eq!(answer, solved_answer);
 
-    let lhs = gen_polynomial(3);
+    let inner = gen_polynomial(2);
+    let lhs = Pair::new(Expr::Func(Func::Sine, Box::new(inner)), Op::Div, gen_polynomial(2)).into();
     println!("{:?}", lhs);
 
-    let ddx = simplify(&derive(&lhs));
+    let ddx = simplify(&derive(&derive(&lhs)));
 
     let equation = Equation {
         lhs: Expr::Derivative(Box::new(lhs)),

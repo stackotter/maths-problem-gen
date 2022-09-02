@@ -56,6 +56,32 @@ pub fn simplify(expr: &Expr) -> Expr {
                     (Expr::Rational(rational), right) if rational == Rational::int(1) => {
                         return right;
                     }
+                    (left, right) if left == right => {
+                        return Pair::new(left, Op::Pow, Rational::int(2).into()).into();
+                    }
+                    (
+                        left,
+                        Expr::Pair(box Pair {
+                            left: right,
+                            op: Op::Pow,
+                            right: exponent,
+                        }),
+                    )
+                    | (
+                        Expr::Pair(box Pair {
+                            left,
+                            op: Op::Pow,
+                            right: exponent,
+                        }),
+                        right,
+                    ) if left == right => {
+                        return Pair::new(
+                            left,
+                            Op::Pow,
+                            Pair::new(exponent, Op::Add, Rational::int(1).into()).into(),
+                        )
+                        .into();
+                    }
                     _ => (),
                 },
                 Op::Add => match (lsimplified.clone(), rsimplified.clone()) {
@@ -99,6 +125,24 @@ pub fn simplify(expr: &Expr) -> Expr {
                     return Rational::int(1).into();
                 }
                 Op::Pow if rsimplified == Rational::int(1).into() => return lsimplified.clone(),
+                Op::Pow => match (lsimplified.clone(), rsimplified.clone()) {
+                    (
+                        Expr::Pair(box Pair {
+                            left: base,
+                            op: Op::Pow,
+                            right: inner_power,
+                        }),
+                        outer_power,
+                    ) => {
+                        return Pair::new(
+                            base,
+                            Op::Pow,
+                            Pair::new(inner_power, Op::Mul, outer_power).into(),
+                        )
+                        .into();
+                    }
+                    _ => (),
+                },
                 _ => (),
             }
 
@@ -112,12 +156,15 @@ pub fn simplify(expr: &Expr) -> Expr {
             let simplified = simplify(inner);
             match simplified {
                 Expr::Negative(expr) => *expr,
-                Expr::Pair(_) | Expr::Rational(_) | Expr::Variable(_) | Expr::Derivative(_) => {
-                    Expr::Negative(Box::new(simplified))
-                }
+                Expr::Pair(_)
+                | Expr::Rational(_)
+                | Expr::Variable(_)
+                | Expr::Derivative(_)
+                | Expr::Func(_, _) => Expr::Negative(Box::new(simplified)),
             }
         }
         Expr::Variable(_) => expr.to_owned(),
-        Expr::Derivative(_) => simplify(&derive(expr)),
+        Expr::Derivative(inner) => simplify(&derive(inner)),
+        Expr::Func(func, inner) => Expr::Func(*func, Box::new(simplify(&inner))),
     }
 }
