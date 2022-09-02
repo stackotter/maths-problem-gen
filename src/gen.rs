@@ -177,3 +177,22 @@ pub fn gen_polynomial(degree: u64) -> Expr {
 
     simplify(&pair.into())
 }
+
+pub fn gen_polynomial_choices(answer: &Expr, count: u64) -> Vec<Expr> {
+    let mut rng = rand::thread_rng();
+    let mut choices = vec![];
+
+    for _ in 0..count {
+        let mut choice = answer.clone();
+        loop {
+            let replacement = Rational::int(rng.gen_range(0..10));
+            match replace_random_constant(&mut choice, replacement.into()) {
+                Ok(replaced) if replaced != replacement => break,
+                _ => ()
+            }
+        }
+        choices.push(choice);
+    }
+
+    choices
+}

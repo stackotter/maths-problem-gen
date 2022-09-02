@@ -87,7 +87,13 @@ impl<T: LatexConvertible> LatexConvertible for Answer<T> {
     }
 }
 
-pub async fn render_to_bytes<T: LatexConvertible>(
+impl LatexConvertible for Box<dyn LatexConvertible + Send + Sync> {
+    fn to_latex(&self) -> String {
+        LatexConvertible::to_latex(self.as_ref())
+    }
+}
+
+pub async fn render_to_bytes<T: LatexConvertible + ?Sized>(
     maths: &T,
     mathoid_server: Option<&str>,
     inline: bool,
@@ -111,7 +117,7 @@ pub async fn render_to_bytes<T: LatexConvertible>(
     Ok(response.bytes().await?.to_vec())
 }
 
-pub async fn render_to_file<T: LatexConvertible>(
+pub async fn render_to_file<T: LatexConvertible + ?Sized>(
     maths: &T,
     file: &Path,
     mathoid_server: Option<&str>,
