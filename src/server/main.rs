@@ -2,9 +2,12 @@
 extern crate rocket;
 
 use maths_problem_gen::derive::derive;
-use maths_problem_gen::gen::{gen_backtrack, gen_polynomial, gen_polynomial_choices};
+use maths_problem_gen::gen::{
+    gen_arithmetic, gen_backtrack, gen_polynomial, gen_polynomial_choices,
+};
 use maths_problem_gen::render::LatexConvertible;
 use maths_problem_gen::simplify::simplify;
+use maths_problem_gen::Rational;
 use maths_problem_gen::{gen::gen_choices, render::render_to_file, Answer, Equation, Expr};
 use rand::Rng;
 use rocket::fs::NamedFile;
@@ -22,6 +25,21 @@ type Choice = Answer<Maths>;
 fn generate_multiple_choice_problem(level: u64) -> Result<(Maths, Vec<Choice>, usize), String> {
     let (problem, answer, mut choices): (Maths, Maths, Vec<Maths>) = match level {
         1 => {
+            let answer = Rational::int(rand::thread_rng().gen_range(1..20));
+            let problem = gen_arithmetic(2, answer);
+
+            let choices = gen_choices(answer, 3)
+                .into_iter()
+                .map(|c| -> Maths { Box::new(c) })
+                .collect();
+
+            (
+                Box::new(problem),
+                Box::new(Into::<Expr>::into(answer)),
+                choices,
+            )
+        }
+        2 => {
             let (equation, answer) = gen_backtrack(2);
 
             let choices: Vec<Maths> = gen_choices(answer, 3)
@@ -38,17 +56,14 @@ fn generate_multiple_choice_problem(level: u64) -> Result<(Maths, Vec<Choice>, u
                 rhs: answer.into(),
             };
 
-            (
-                Box::new(equation),
-                Box::new(answer),
-                choices,
-            )
+            (Box::new(equation), Box::new(answer), choices)
         }
-        2 => {
-            let polynomial = gen_polynomial(4);
+        3 => {
+            let degree = 4;
+            let polynomial = gen_polynomial(degree);
             let answer = simplify(&derive(&polynomial));
             let problem = Expr::Derivative(Box::new(polynomial));
-            let choices: Vec<Maths> = gen_polynomial_choices(&answer, 3)
+            let choices: Vec<Maths> = gen_polynomial_choices(&answer, degree, 3)
                 .into_iter()
                 .map(|c| -> Maths { Box::new(c) })
                 .collect();

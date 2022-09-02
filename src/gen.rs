@@ -137,7 +137,7 @@ pub fn gen_backtrack(depth: u64) -> (Equation, Rational) {
 pub fn gen_choices(answer: Rational, count: usize) -> Vec<Rational> {
     let mut answers = vec![];
 
-    let mut offsets: Vec<_> = (-4..4).collect();
+    let mut offsets: Vec<_> = (-4..4).filter(|&x| x != 0).collect();
 
     for _ in 0..count {
         let mut rng = rand::thread_rng();
@@ -178,17 +178,15 @@ pub fn gen_polynomial(degree: u64) -> Expr {
     simplify(&pair.into())
 }
 
-pub fn gen_polynomial_choices(answer: &Expr, count: u64) -> Vec<Expr> {
-    let mut rng = rand::thread_rng();
+pub fn gen_polynomial_choices(answer: &Expr, degree: u64, count: u64) -> Vec<Expr> {
     let mut choices = vec![];
 
     for _ in 0..count {
-        let mut choice = answer.clone();
+        let mut choice;
         loop {
-            let replacement = Rational::int(rng.gen_range(0..10));
-            match replace_random_constant(&mut choice, replacement.into()) {
-                Ok(replaced) if replaced != replacement => break,
-                _ => ()
+            choice = gen_polynomial(degree);
+            if choice != *answer {
+                break;
             }
         }
         choices.push(choice);
