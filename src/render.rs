@@ -1,4 +1,4 @@
-use crate::{fmt::bracketize, Answer, Equation, Expr, Op, Pair, Rational};
+use crate::{Answer, Equation, Expr, Op, Pair, Rational};
 use std::{
     collections::HashMap,
     error::Error,
@@ -23,6 +23,10 @@ impl LatexConvertible for Rational {
     }
 }
 
+fn latex_bracketize(s: &str) -> String {
+    format!("\\left({s}\\right)")
+}
+
 impl LatexConvertible for Pair {
     fn to_latex(&self) -> String {
         let (lrequires_brackets, rrequires_brackets) = self.requires_brackets(true, false);
@@ -31,10 +35,10 @@ impl LatexConvertible for Pair {
         let mut r: String = self.right.to_latex();
 
         if lrequires_brackets {
-            l = bracketize(&l);
+            l = latex_bracketize(&l);
         }
         if rrequires_brackets {
-            r = bracketize(&r);
+            r = latex_bracketize(&r);
         }
 
         match self.op {
@@ -70,8 +74,10 @@ impl LatexConvertible for Expr {
                 format!("-{}", expr.to_latex())
             }
             Expr::Variable(var) => var.to_owned().into(),
-            Expr::Derivative(expr) => format!("\\frac{{d}}{{dx}}({})", expr.to_latex()),
-            Expr::Func(func, inner) => format!("{}({})", func, inner.to_latex())
+            Expr::Derivative(expr) => {
+                format!("\\frac{{d}}{{dx}}\\left({}\\right)", expr.to_latex())
+            }
+            Expr::Func(func, inner) => format!("{}\\left({}\\right)", func, inner.to_latex()),
         }
     }
 }

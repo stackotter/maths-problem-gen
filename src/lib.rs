@@ -96,7 +96,7 @@ impl Pair {
 
         if self.op == Op::Pow {
             match self.left {
-                Expr::Pair(box Pair { op: Op::Pow, .. }) => lrequires = true,
+                Expr::Pair(box Pair { op: Op::Pow | Op::Div, .. }) => lrequires = true,
                 _ => (),
             }
         }

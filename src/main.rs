@@ -1,4 +1,8 @@
-use maths_problem_gen::{gen::gen_polynomial, simplify::simplify, Equation, Func};
+use maths_problem_gen::{
+    gen::{gen_derivable, gen_polynomial},
+    simplify::simplify,
+    Equation, Func,
+};
 use std::path::Path;
 
 use maths_problem_gen::{
@@ -14,18 +18,29 @@ async fn main() {
     // let solved_answer = solve(&equation).expect("Should be solvable");
     // assert_eq!(answer, solved_answer);
 
-    let inner = gen_polynomial(2);
-    let lhs = Pair::new(Expr::Func(Func::Sine, Box::new(inner)), Op::Div, gen_polynomial(2)).into();
-    println!("{:?}", lhs);
+    // let expr = Pair::new(
+    //     Pair::new(
+    //         Pair::new(Expr::Variable('x'), Op::Pow, Rational::int(3).into()).into(),
+    //         Op::Add,
+    //         Pair::new(Expr::Variable('x'), Op::Pow, Rational::int(2).into()).into(),
+    //     ).into(),
+    //     Op::Pow,
+    //     Rational::int(2).into(),
+    // ).into();
 
-    let ddx = simplify(&derive(&derive(&lhs)));
+    let expr = Pair::new(
+        Expr::Variable('x'),
+        Op::Div,
+        Pair::new(Expr::Variable('x'), Op::Pow, Rational::int(3).into()).into(),
+    )
+    .into();
 
-    let equation = Equation {
-        lhs: Expr::Derivative(Box::new(lhs)),
-        rhs: ddx
-    };
-
-    render_to_file(&equation, &Path::new("out.png"), None, false)
-        .await
-        .expect("render to png should succeed");
+    render_to_file(
+        &simplify(&derive(&expr)),
+        &Path::new("out.png"),
+        None,
+        false,
+    )
+    .await
+    .expect("render to png should succeed");
 }

@@ -53,11 +53,28 @@ pub fn simplify(expr: &Expr) -> Expr {
                             Pair::new((-rational).into(), Op::Mul, right).into(),
                         ));
                     }
-                    (Expr::Rational(rational), right) if rational == Rational::int(1) => {
-                        return right;
+                    (Expr::Rational(rational), expr) | (expr, Expr::Rational(rational))
+                        if rational == Rational::int(1) =>
+                    {
+                        return expr;
                     }
                     (left, right) if left == right => {
                         return Pair::new(left, Op::Pow, Rational::int(2).into()).into();
+                    }
+                    (
+                        left,
+                        Expr::Pair(box Pair {
+                            left: Expr::Rational(rational),
+                            op: Op::Mul,
+                            right,
+                        }),
+                    ) => {
+                        return Pair::new(
+                            rational.into(),
+                            Op::Mul,
+                            simplify(&Pair::new(left, Op::Mul, right).into()),
+                        )
+                        .into();
                     }
                     (
                         left,
@@ -78,7 +95,7 @@ pub fn simplify(expr: &Expr) -> Expr {
                         return Pair::new(
                             left,
                             Op::Pow,
-                            Pair::new(exponent, Op::Add, Rational::int(1).into()).into(),
+                            simplify(&Pair::new(exponent, Op::Add, Rational::int(1).into()).into()),
                         )
                         .into();
                     }
@@ -97,19 +114,19 @@ pub fn simplify(expr: &Expr) -> Expr {
                         Expr::Pair(box Pair {
                             left: Expr::Rational(lcoefficient),
                             op: Op::Mul,
-                            right: Expr::Variable(lunknown),
+                            right: lexpr,
                         }),
                         Expr::Pair(box Pair {
                             left: Expr::Rational(rcoefficient),
                             op: Op::Mul,
-                            right: Expr::Variable(runknown),
+                            right: rexpr,
                         }),
-                    ) if lunknown == runknown => {
+                    ) if lexpr == rexpr => {
                         let new_coefficient = lcoefficient + rcoefficient;
                         return Expr::Pair(Box::new(Pair::new(
                             new_coefficient.into(),
                             Op::Mul,
-                            Expr::Variable(lunknown),
+                            lexpr,
                         )));
                     }
                     _ => (),
@@ -119,6 +136,55 @@ pub fn simplify(expr: &Expr) -> Expr {
                         return Expr::Negative(Box::new(right))
                     }
                     (left, Expr::Rational(rational)) if rational.numerator == 0 => return left,
+                    (
+                        Expr::Pair(box Pair {
+                            left: Expr::Rational(lcoefficient),
+                            op: Op::Mul,
+                            right: lexpr,
+                        }),
+                        Expr::Pair(box Pair {
+                            left: Expr::Rational(rcoefficient),
+                            op: Op::Mul,
+                            right: rexpr,
+                        }),
+                    ) if lexpr == rexpr => {
+                        let new_coefficient = lcoefficient - rcoefficient;
+                        return Pair::new(
+                            new_coefficient.into(),
+                            Op::Mul,
+                            lexpr,
+                        ).into();
+                    }
+                    (
+                        lexpr,
+                        Expr::Pair(box Pair {
+                            left: Expr::Rational(rcoefficient),
+                            op: Op::Mul,
+                            right: rexpr,
+                        }),
+                    ) if lexpr == rexpr => {
+                        let new_coefficient = Rational::int(1) - rcoefficient;
+                        return Pair::new(
+                            new_coefficient.into(),
+                            Op::Mul,
+                            lexpr,
+                        ).into();
+                    }
+                    (
+                        Expr::Pair(box Pair {
+                            left: Expr::Rational(lcoefficient),
+                            op: Op::Mul,
+                            right: lexpr,
+                        }),
+                        rexpr,
+                    ) if lexpr == rexpr => {
+                        let new_coefficient = lcoefficient - Rational::int(1);
+                        return Pair::new(
+                            new_coefficient.into(),
+                            Op::Mul,
+                            lexpr,
+                        ).into();
+                    }
                     _ => (),
                 },
                 Op::Pow if rsimplified == Rational::int(0).into() => {
@@ -137,13 +203,45 @@ pub fn simplify(expr: &Expr) -> Expr {
                         return Pair::new(
                             base,
                             Op::Pow,
-                            Pair::new(inner_power, Op::Mul, outer_power).into(),
+                            simplify(&Pair::new(inner_power, Op::Mul, outer_power).into()),
                         )
                         .into();
                     }
                     _ => (),
                 },
-                _ => (),
+                Op::Div => match (lsimplified.clone(), rsimplified.clone()) {
+                    (
+                        Expr::Pair(box Pair {
+                            left: numerator,
+                            op: Op::Div,
+                            right: denominator,
+                        }),
+                        second_denominator,
+                    ) => {
+                        return Pair::new(
+                            numerator,
+                            Op::Div,
+                            Pair::new(denominator, Op::Mul, second_denominator).into(),
+                        )
+                        .into()
+                    }
+                    (
+                        numerator,
+                        Expr::Pair(box Pair {
+                            left: denominator,
+                            op: Op::Div,
+                            right: second_numerator,
+                        }),
+                    ) => {
+                        return Pair::new(
+                            Pair::new(numerator, Op::Mul, second_numerator).into(),
+                            Op::Div,
+                            denominator,
+                        )
+                        .into()
+                    }
+                    _ => (),
+                },
             }
 
             return Expr::Pair(Box::new(Pair::new(

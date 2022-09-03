@@ -1,63 +1,52 @@
 use crate::{Expr, Func, Op, Pair, Rational};
 
 pub fn derive(expr: &Expr) -> Expr {
+    if expr.unknown_count() == 0 {
+        return Rational::int(0).into();
+    }
+
     match expr {
         Expr::Rational(_) => Rational::int(0).into(),
         Expr::Pair(pair) => match pair.op {
-            Op::Add | Op::Sub => Expr::Pair(Box::new(Pair::new(
-                derive(&pair.left),
-                pair.op.clone(),
-                derive(&pair.right),
-            ))),
-            Op::Mul => Expr::Pair(Box::new(Pair::new(
-                Expr::Pair(Box::new(Pair::new(
-                    derive(&pair.left),
-                    Op::Mul,
-                    pair.right.clone(),
-                ))),
+            Op::Add | Op::Sub => {
+                Pair::new(derive(&pair.left), pair.op.clone(), derive(&pair.right)).into()
+            }
+            Op::Mul => Pair::new(
+                Pair::new(derive(&pair.left), Op::Mul, pair.right.clone()).into(),
                 Op::Add,
-                Expr::Pair(Box::new(Pair::new(
-                    pair.left.clone(),
-                    Op::Mul,
-                    derive(&pair.right),
-                ))),
-            ))),
-            Op::Div => Expr::Pair(Box::new(Pair::new(
-                Expr::Pair(Box::new(Pair::new(
-                    Expr::Pair(Box::new(Pair::new(
-                        derive(&pair.left),
-                        Op::Mul,
-                        pair.right.clone(),
-                    ))),
+                Pair::new(pair.left.clone(), Op::Mul, derive(&pair.right)).into(),
+            )
+            .into(),
+            Op::Div => Pair::new(
+                Pair::new(
+                    Pair::new(derive(&pair.left), Op::Mul, pair.right.clone()).into(),
                     Op::Sub,
-                    Expr::Pair(Box::new(Pair::new(
-                        pair.left.clone(),
-                        Op::Mul,
-                        derive(&pair.right),
-                    ))),
-                ))),
+                    Pair::new(pair.left.clone(), Op::Mul, derive(&pair.right)).into(),
+                )
+                .into(),
                 Op::Div,
-                Expr::Pair(Box::new(Pair::new(
-                    pair.right.clone(),
-                    Op::Mul,
-                    pair.right.clone(),
-                ))),
-            ))),
+                Pair::new(pair.right.clone(), Op::Pow, Rational::int(2).into()).into(),
+            )
+            .into(),
             Op::Pow => {
                 if pair.right.unknown_count() == 0 {
-                    Expr::Pair(Box::new(Pair::new(
-                        pair.right.clone(),
+                    Pair::new(
+                        Pair::new(
+                            pair.right.clone(),
+                            Op::Mul,
+                            Pair::new(
+                                pair.left.clone(),
+                                Op::Pow,
+                                Pair::new(pair.right.clone(), Op::Sub, Rational::int(1).into())
+                                    .into(),
+                            )
+                            .into(),
+                        )
+                        .into(),
                         Op::Mul,
-                        Expr::Pair(Box::new(Pair::new(
-                            pair.left.clone(),
-                            Op::Pow,
-                            Expr::Pair(Box::new(Pair::new(
-                                pair.right.clone(),
-                                Op::Sub,
-                                Rational::int(1).into(),
-                            ))),
-                        ))),
-                    )))
+                        derive(&pair.left),
+                    )
+                    .into()
                 } else {
                     unimplemented!();
                 }

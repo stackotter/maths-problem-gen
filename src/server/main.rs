@@ -3,7 +3,7 @@ extern crate rocket;
 
 use maths_problem_gen::derive::derive;
 use maths_problem_gen::gen::{
-    gen_arithmetic, gen_backtrack, gen_polynomial, gen_polynomial_choices,
+    gen_arithmetic, gen_backtrack, gen_polynomial, gen_polynomial_choices, gen_derivable,
 };
 use maths_problem_gen::render::LatexConvertible;
 use maths_problem_gen::simplify::simplify;
@@ -59,11 +59,10 @@ fn generate_multiple_choice_problem(level: u64) -> Result<(Maths, Vec<Choice>, u
             (Box::new(equation), Box::new(answer), choices)
         }
         3 => {
-            let degree = 4;
-            let polynomial = gen_polynomial(degree);
-            let answer = simplify(&derive(&polynomial));
-            let problem = Expr::Derivative(Box::new(polynomial));
-            let choices: Vec<Maths> = gen_polynomial_choices(&answer, degree, 3)
+            let expr = gen_derivable(2);
+            let answer = simplify(&derive(&expr));
+            let problem = Expr::Derivative(Box::new(expr));
+            let choices: Vec<Maths> = gen_polynomial_choices(&answer, 0, 3)
                 .into_iter()
                 .map(|c| -> Maths { Box::new(c) })
                 .collect();
