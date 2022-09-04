@@ -1,4 +1,6 @@
 use crate::{Answer, Equation, Expr, Op, Pair, Rational};
+use image::{io::Reader as ImageReader, ImageFormat};
+use reqwest::Client;
 use std::{
     collections::HashMap,
     error::Error,
@@ -6,8 +8,6 @@ use std::{
     io::{copy, Cursor},
     path::Path,
 };
-
-use reqwest::Client;
 
 pub trait LatexConvertible {
     fn to_latex(&self) -> String;
@@ -100,6 +100,21 @@ impl LatexConvertible for Box<dyn LatexConvertible + Send + Sync> {
     }
 }
 
+fn u8_chan_to_f32(val: u8) -> f32 {
+    val as f32 / (u8::MAX as f32)
+}
+
+fn f32_chan_to_u8(val: f32) -> u8 {
+    (val * (u8::MAX as f32)) as u8
+}
+
+fn composite(val: u8, alpha: u8, bg: u8) -> u8 {
+    let val = u8_chan_to_f32(val);
+    let alpha = u8_chan_to_f32(alpha);
+    let bg = u8_chan_to_f32(bg);
+    f32_chan_to_u8(val * alpha + bg * (1.0 - alpha))
+}
+
 pub async fn render_to_bytes<T: LatexConvertible + ?Sized>(
     maths: &T,
     mathoid_server: Option<&str>,
@@ -121,7 +136,25 @@ pub async fn render_to_bytes<T: LatexConvertible + ?Sized>(
         .send()
         .await?;
 
-    Ok(response.bytes().await?.to_vec())
+    let bytes = response.bytes().await?;
+
+    // make image bg white
+    let mut reader = ImageReader::new(Cursor::new(bytes.clone()));
+    reader.set_format(image::ImageFormat::Png);
+    let mut img = reader.decode()?.into_rgba8();
+    for p in img.pixels_mut() {
+        let a = p[3];
+        if a != u8::MAX {
+            for i in 0..3 {
+                p[i] = composite(p[i], a, u8::MAX);
+            }
+            p[3] = u8::MAX;
+        }
+    }
+    let mut buf = Cursor::new(Vec::new());
+    img.write_to(&mut buf, ImageFormat::Png)?;
+
+    Ok(buf.into_inner())
 }
 
 pub async fn render_to_file<T: LatexConvertible + ?Sized>(

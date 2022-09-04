@@ -14,3 +14,4 @@ rocket = { version = "0.5.0-rc.2", features=["json"] }
 tokio = "1.20.1"
 uuid = { version = "1.1.2", features = ["v4"] }
 openssl = { version = "0.10", features = ["vendored"] }
+image = "0.24.3"
